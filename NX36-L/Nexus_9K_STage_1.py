@@ -9,10 +9,10 @@ import re
 ################# VARIABLES #################
 #############################################
 
-SWITCH = 'NAOSW133'
+SWITCH = 'GEOSW011'
 #INFRA_CH_GRP_LIST = [1,133]
 SHEET = SWITCH
-BASE_DIR = '/home/aspera/Documents/VF-2017/NMP/NA1C/' + SWITCH + '/Stage_1/'
+BASE_DIR = '/home/aspera/Documents/VF-2017/NMP/GE01/' + SWITCH + '/Stage_1/'
 
 
 INPUT_XLS = BASE_DIR + SWITCH + '_DB_MIGRATION.xlsx'
@@ -122,12 +122,12 @@ def create_qos_legendas(my_wb):
     QOS_SHEET = 'QoS Legenda'
     ws = my_wb.create_sheet(index = 1, title = QOS_SHEET)
     
-    ws.cell('A1').value = 'QoS Codes'
-    ws.cell('A2').value = 'U = Untrusted (set DSCP = 0 to all traffic on interface): on all ports facing OAM LAN'
-    ws.cell('A3').value = 'T = Trusted (do not change any DSCP Value): on all ports facing LTE nodes (SecGW,MME,P-GW) and IT world' 
-    ws.cell('A4').value = 'V = Voice (set DSCP = EF to all traffic on interface): on all ports facing VOICE services (RTP, VOIP)'
-    ws.cell('A5').value = 'S = Signalling (set DSCP = AF31 to all traffic on interface): on all ports facing SIGNALLING services (SIP,SCTP, etc)'
-    ws.cell('A6').value = 'K = Trunk (set DSCP = AF31 for Signalling and DSCP = 0 for O&M, ACL based) on Nexus 9K'
+    ws['A1'] = 'QoS Codes'
+    ws['A2'] = 'U = Untrusted (set DSCP = 0 to all traffic on interface): on all ports facing OAM LAN'
+    ws['A3'] = 'T = Trusted (do not change any DSCP Value): on all ports facing LTE nodes (SecGW,MME,P-GW) and IT world' 
+    ws['A4'] = 'V = Voice (set DSCP = EF to all traffic on interface): on all ports facing VOICE services (RTP, VOIP)'
+    ws['A5'] = 'S = Signalling (set DSCP = AF31 to all traffic on interface): on all ports facing SIGNALLING services (SIP,SCTP, etc)'
+    ws['A6'] = 'K = Trunk (set DSCP = AF31 for Signalling and DSCP = 0 for O&M, ACL based) on Nexus 9K'
     
     my_wb.save(filename = OUTPUT_XLS)
 
@@ -141,17 +141,17 @@ def create_color_legendas(my_wb):
     pinkFill = PatternFill(start_color='eeaaee', end_color='eeaaee', fill_type='solid')     # To be Verified
     greenFill =  PatternFill(start_color='a7bd2f', end_color='a7bd2f', fill_type='solid')   # Not To be Verified
 
-    ws.cell('A1').value = 'Legend'
-    ws.cell('A2').value = 'To be Deleted??'
+    ws['A1'] = 'Legend'
+    ws['A2'] = 'To be Deleted??'
     ws.cell('A2').fill = redFill
-    ws.cell('A3').value = 'To be Checked'
+    ws['A3'] = 'To be Checked'
     ws.cell('A3').fill = orangeFill
-    ws.cell('A4').value = 'To be Merged??'
+    ws['A4'] = 'To be Merged??'
     ws.cell('A4').fill = yellowFill   
-    ws.cell('A5').value = 'Interface description'
-    ws.cell('A6').value = 'To be Verified'
+    ws['A5'] = 'Interface description'
+    ws['A6'] = 'To be Verified'
     ws.cell('A6').fill = pinkFill
-    ws.cell('A7').value = 'Not To be Verified??'
+    ws['A7'] = 'Not To be Verified??'
     ws.cell('A7').fill = greenFill
 
     my_wb.save(filename = OUTPUT_XLS)
@@ -160,10 +160,10 @@ def create_check_legendas(my_wb):
     CHECK_SHEET = 'Check Legenda'
     ws = my_wb.create_sheet(index = 3, title = CHECK_SHEET)
     
-    ws.cell('A1').value = 'Checks to be done on Interfaces:'
-    ws.cell('A2').value = 'Check Half/Full duplex (Action column help here)'
-    ws.cell('A3').value = 'Change 10Mb/s --> 100Mb/s and half to full duplex where possible,'
-    ws.cell('A4').value = 'Check if notconnect ports (from show interface status command) have to migrated or not'
+    ws['A1'] = 'Checks to be done on Interfaces:'
+    ws['A2'] = 'Check Half/Full duplex (Action column help here)'
+    ws['A3'] = 'Change 10Mb/s --> 100Mb/s and half to full duplex where possible,'
+    ws['A4'] = 'Check if notconnect ports (from show interface status command) have to migrated or not'
     
     my_wb.save(filename = OUTPUT_XLS)
 
@@ -171,20 +171,20 @@ def create_ap_legendas(my_wb):
     AP_SHEET = 'Access Point Legenda'
     ws = my_wb.create_sheet(index = 1, title = AP_SHEET)
     
-    ws.cell('A1').value = 'Access Point Values (Column C)'
-    ws.cell('A2').value = 'Access'
-    ws.cell('A3').value = 'Trunk' 
+    ws['A1'] = 'Access Point Values (Column C)'
+    ws['A2'] = 'Access'
+    ws['A3'] = 'Trunk' 
    
-    ws.cell('C1').value = 'System Type Values (Column N)'
-    ws.cell('C2').value = 'Core-Router'
-    ws.cell('c3').value = 'Core-Switch'
-    ws.cell('C4').value = 'Decomissioned'
-    ws.cell('C5').value = 'Edge-Router'
-    ws.cell('C6').value = 'Edge-Switch'
-    ws.cell('C7').value = 'L2-Host'
-    ws.cell('C8').value = 'Monitoring'
-    ws.cell('C9').value = 'Port-Channel'
-    ws.cell('C10').value = 'Spare'
+    ws['C1'] = 'System Type Values (Column N)'
+    ws['C2'] = 'Core-Router'
+    ws['c3'] = 'Core-Switch'
+    ws['C4'] = 'Decomissioned'
+    ws['C5'] = 'Edge-Router'
+    ws['C6'] = 'Edge-Switch'
+    ws['C7'] = 'L2-Host'
+    ws['C8'] = 'Monitoring'
+    ws['C9'] = 'Port-Channel'
+    ws['C10'] = 'Spare'
     
     my_wb.save(filename = OUTPUT_XLS)
 
