@@ -30,8 +30,8 @@ OTHER_SHEET = OTHER_SWITCH
 PO_OSW_OSW = r'^interface Port-channel1$'
 PO_OSW_VPE = r'^interface Port-channel133$'
 
-qos_sp_def_N9508_dict = {'U':' service-policy type qos input UNTRUST','T':' service-policy type qos input TRUST', 'S':' service-policy type qos input SIGNALLING','V':' service-policy type qos input VOICE', 'D':' service-policy type qos input 2G_3G_DATA', 'K':' service-policy type qos input POLICY_MGW'}
-qos_sp_def_N3048_dict = {'U':' service-policy type qos input UNTRUST','T':''                                    , 'S':' service-policy type qos input SIGNALLING','V':' service-policy type qos input VOICE', 'D':' service-policy type qos input 2G_3G_DATA'}
+qos_sp_def_N9508_dict = {'U':' service-policy type qos input UNTRUST','T':' service-policy type qos input VF-INGRESS', 'S':' service-policy type qos input SIGNALLING','V':' service-policy type qos input VOICE', 'D':' service-policy type qos input 2G_3G_DATA', 'K':' service-policy type qos input POLICY_MGW'}
+qos_sp_def_N3048_dict = {'U':' service-policy type qos input UNTRUST','T':''                                         , 'S':' service-policy type qos input SIGNALLING','V':' service-policy type qos input VOICE', 'D':' service-policy type qos input 2G_3G_DATA'}
 
 #############################################
 ################ FUNCTIONS ##################
