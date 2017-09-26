@@ -83,7 +83,7 @@ def get_po_vce():
                   ' load-interval 30',
                   ' switchport',
                   ' switchport trunk',
-                  ' switchport trunk allowed vlan ' + real_vlan_tbm,
+                  ' switchport trunk allowed vlan add ' + real_vlan_tbm,
                   ' switchport mode trunk',
                   ' mtu 9216',
                   ' no ip address',
@@ -291,13 +291,13 @@ def get_po_vce_vce_700():
 
     po_700 = [           
             'interface port-channel700',
-            ' service-policy type qos input TRUST',
-            ' switchport trunk allowed vlan ' + result_s 
+            ' service-policy type qos input VF-INGRESS',
+            ' switchport trunk allowed vlan add ' + result_s 
             ]
 
     return po_700
 
-def get_po_vce_vsw1_301(): 
+def get_po_vce_vsw1_301_and_1000(): 
     
     vlan_final = []
     
@@ -313,11 +313,17 @@ def get_po_vce_vsw1_301():
     vlan_final = []
 
     po_301_tot = [  'interface port-channel301',  
-                    ' service-policy type qos input TRUST', 
-                    ' switchport trunk allowed vlan '  + vlan_final_s
+                    ' service-policy type qos input VF-INGRESS', 
+                    ' switchport trunk allowed vlan add '  + vlan_final_s
                 ]
+ 
+    po_1000_tot = [  'interface port-channel1000',  
+                    ' service-policy type qos input VF-INGRESS', 
+                    ' switchport trunk allowed vlan add '  + vlan_final_s
+                ]
+   
             
-    return po_301_tot
+    return po_301_tot, po_1000_tot
 
 def write_cfg(conf_list):
     ''' write conf_list on a file whom file_name contains device '''
@@ -331,9 +337,8 @@ def write_cfg(conf_list):
 
 new_po = 'interface Port-channel441'
 
-be2po_map = {'interface Bundle-Ether133':'interface Port-channel133', 
-               'interface TenGigabitEthernet0/2/0/0':'interface TenGigabitEthernet7/1',
-               # below no port-channel interfaces
+be2po_map = {'interface Bundle-Ether133':'interface Port-channel133',                   # This is BE <--> PO mapping
+               'interface TenGigabitEthernet0/2/0/0':'interface TenGigabitEthernet7/1', # List of members
                }
 
 PO_OSW_MATE = 'Port-channel1'
@@ -347,6 +352,7 @@ BRIDGE_NAME =   '10.192.10.8'
 
 BASE_DIR = '/home/aspera/Documents/VF-2017/NMP/NA1C/' + OSW_SWITCH + '/Stage_4/VCE/'
 
+
 #INPUT_XLS = BASE_DIR + OSW_SWITCH + '_OUT_DB_OPT.xlsx'
 
 VPE_CFG_TXT = BASE_DIR + VPE_ROUTER + '.txt'
@@ -356,7 +362,7 @@ VCE_CFG_TXT_OUT = BASE_DIR + OSW_SWITCH + 'VCE_addendum.txt'
 VCE_CFG_TXT_IN = BASE_DIR + OSW_SWITCH + 'VCE.txt'
 
 MyUsername = "zzasp70"
-MyBridgePwd = "SPra0094"
+MyBridgePwd = "0094SPra"
 MyTacacsPwd = "0094SP_ra"
  
 ############## MAIN ###########
@@ -365,8 +371,8 @@ po_vce_cfg_list = get_po_vce()
 stp_cfg_list = get_stp_conf()
 svi_conf_list = get_801_802_svi()
 po700_conf = get_po_vce_vce_700()
-po301_conf = get_po_vce_vsw1_301()
-vce_conf = ['!'] + stp_cfg_list + ['!'] + po_vce_cfg_list + ['!'] + po700_conf + ['!'] +  po301_conf + ['!'] +  svi_conf_list + ['!'] 
+po301_conf, po1000_conf = get_po_vce_vsw1_301_and_1000()
+vce_conf = ['!'] + stp_cfg_list + ['!'] + po_vce_cfg_list + ['!'] + po700_conf + ['!'] +  po1000_conf + ['!'] + po301_conf + ['!'] +  svi_conf_list + ['!'] 
 for elem in vce_conf:
     print (elem)
 write_cfg(vce_conf)
