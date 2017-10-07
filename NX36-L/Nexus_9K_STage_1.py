@@ -225,6 +225,14 @@ def colour_output_xlsx():
     wb.save(filename = OUTPUT_XLS)
     print ("End F2")
 
+def get_descr(if_cfg):
+    
+    for elem in if_cfg:
+        if elem[1:12] == 'description':
+            desc_from_cfg = str.strip(elem[13:])    
+    return desc_from_cfg
+
+
 def readin_xls_writeout_xls():
     
     header_out = ['SRC OSW IF', 'DST VCE IF', 'Access Type', 'VLAN', 'QoS', 'Nexus AP', 'Member/PO', 'Descr', 'Duplex', 'Speed', 'Media Type', 'Action', 'Root-Guard', 'System Type', 'Check Descr']
@@ -306,15 +314,17 @@ def readin_xls_writeout_xls():
                         row_w[14].value = "Description unchanged"
                         row_w[14].fill = greenFill
                     else:
-                        row_w[7].value = "INTERFACE TO BE CHECKED"
+                        # row_w[7].value = "INTERFACE TO BE CHECKED"
+                        row_w[7].value = get_descr(intf_cfg)
                         row_w[14].value = "Description CHANGED!!!"
                         row_w[14].fill = pinkFill                        
                 elif not(intf_obj.has_child_with("description")):
-                    if row_r[5].value == 0:
+                    if row_r[5].value == None:
                         row_w[14].value = "Description unchanged"
                         row_w[14].fill = greenFill
                     else:
-                        row_w[7].value = "INTERFACE TO BE CHECKED"
+                        # row_w[7].value = "INTERFACE TO BE CHECKED"
+                        row_w[7].value = get_descr(intf_cfg)
                         row_w[14].value = "Description CHANGED!!!"
                         row_w[14].fill = pinkFill
    
