@@ -337,8 +337,12 @@ def write_cfg(conf_list):
 
 new_po = 'interface Port-channel441'
 
-be2po_map = {'interface Bundle-Ether133':'interface Port-channel133',                   # This is BE <--> PO mapping
-               'interface TenGigabitEthernet0/2/0/0':'interface TenGigabitEthernet7/1', # List of members
+# be2po_map OR BETTER vpe_to_osw_if_mapping reports all trunk interfaces (main BE/PO and voice/sig trunks)
+
+be2po_map = {'interface Bundle-Ether111':'interface Port-channel111',               # This is BE <--> PO mapping
+               'interface GigabitEthernet0/7/1/1':'interface GigabitEthernet4/21',  # This is VOICE/SIG TRUNK mapping
+               'interface GigabitEthernet0/2/1/2':'interface GigabitEthernet4/22',  # This is VOICE/SIG TRUNK mapping
+               'interface GigabitEthernet0/7/1/2':'interface GigabitEthernet4/23',  # This is VOICE/SIG TRUNK mapping
                }
 
 PO_OSW_MATE = 'Port-channel1'

@@ -78,6 +78,7 @@ def create_if_cfg_list(mig_map):
     for int_obj in int_obj_list:
         int_obj.insert_after(' arp timeout 1500')
         int_obj.insert_after(' shutdown')
+        int_obj.delete_children_matching(r'service-policy')
         
     parse.commit()
     int_obj_list = parse.find_objects(r'^interface')
@@ -143,7 +144,13 @@ def get_router_hsrp( vpeosw_2_vpevce_map):
     parse2 = c.CiscoConfParse(testo_temp)
     
     #if_obj_list = parse2.find_objects('Ether')
-    if_obj_list = parse2.find_objects(r'^ ' + OLD_BE + '.+')
+    #if_obj_list = parse2.find_objects(r'^ ' + OLD_BE + '.+')
+    search_string_list = [ l + '.+' for l in be2po_map ]
+    search_string = '|'.join(search_string_list) 
+    
+    
+    #if_obj_list = parse2.find_objects(r'^ ' + OLD_BE + '.+')
+    if_obj_list = parse2.find_objects(r'^ ' + search_string)
     
     new_if_obj_list = []
     
@@ -171,7 +178,8 @@ def get_vrrp_vlan_map():
     #vce1_cfg = PATH + OSW +'.txt'
     vrrp_map = {}
     
-    parse = c.CiscoConfParse(VCE_CFG_TXT_IN)
+    #parse = c.CiscoConfParse(VCE_CFG_TXT_IN)
+    parse = c.CiscoConfParse(OSW_CFG_TXT)
     obj_list = parse.find_objects_w_child('interface','vrrp')
     
     for obj in obj_list:
@@ -198,6 +206,7 @@ def add_vrrpvip_to_hsrp_cfg(cfg):
                 testo += obj.ioscfg
                 insertstr = '    address ' + vrrp_vlan_map[vlan_tag] + ' secondary' 
                 testo.append(insertstr)
+                testo.append('!')
             else:
                 testo += obj.ioscfg + ['!']
                                 
@@ -214,36 +223,44 @@ def write_cfg(conf_list):
 
 #################### CONSTATNT ##################
 
-new_po = 'interface Port-channel441'
+new_po = 'interface Port-channel411'
 
-be2po_map = {'interface Bundle-Ether133':'interface Port-channel133', 
-               'interface TenGigabitEthernet0/2/0/0':'interface TenGigabitEthernet7/1',
-               # below no port-channel interfaces
+# be2po_map OR BETTER vpe_to_osw_if_mapping reports all trunk interfaces (main BE/PO and voice/sig trunks)
+
+be2po_map = {'interface Bundle-Ether111':'interface Port-channel111',               # This is BE <--> PO mapping
+               'interface GigabitEthernet0/7/1/1':'interface GigabitEthernet4/21',  # This is VOICE/SIG TRUNK mapping
+               'interface GigabitEthernet0/2/1/2':'interface GigabitEthernet4/22',  # This is VOICE/SIG TRUNK mapping
+               'interface GigabitEthernet0/7/1/2':'interface GigabitEthernet4/23',  # This is VOICE/SIG TRUNK mapping
                }
 
-vpeosw_to_vpevce_map = { 'Bundle-Ether133': 'Bundle-Ether441',
-                         'TenGigE0/2/0/0' : 'Bundle-Ether441',
+# vpeosw_to_vpevce maps all old trunks with new one
+
+vpeosw_to_vpevce_map = { 'Bundle-Ether111': 'Bundle-Ether411',
+                         'GigabitEthernet0/7/1/1' : 'Bundle-Ether411',
+                         'GigabitEthernet0/2/1/2' : 'Bundle-Ether411',
+                         'GigabitEthernet0/7/1/2' : 'Bundle-Ether411',
                          # below no port-channel interfaces
                         }
 
-NEW_BE = 'interface Bundle-Ether441'
-OLD_BE = 'interface Bundle-Ether133'
+NEW_BE = 'interface Bundle-Ether411'
+
+OLD_BE = 'interface Bundle-Ether111'
 
 PO_OSW_MATE = 'Port-channel1'
 
-OSW_SWITCH =    'NAOSW133'
-VSW_SWITCH =    'NAVSW13101'
-VPE_ROUTER =    'NAVPE113'
-VCE_SWITCH =    'NAVCE131'
+OSW_SWITCH =    'GEOSW011'
+VSW_SWITCH =    'GEVSW01101'
+VPE_ROUTER =    'GEVPE013'
+VCE_SWITCH =    'GEVCE011'
 BRIDGE_NAME =   '10.192.10.8'
 
-BASE_DIR = '/home/aspera/Documents/VF-2017/NMP/NA1C/' + OSW_SWITCH + '/Stage_4/VPE/'
+BASE_DIR = '/home/aspera/Documents/VF-2017/NMP/GE01/' + OSW_SWITCH + '/Stage_4/VPE/'
 
 #INPUT_XLS = BASE_DIR + OSW_SWITCH + '_OUT_DB_OPT.xlsx'
 
 VPE_CFG_TXT = BASE_DIR + VPE_ROUTER + '.txt'
 
-#OSW_CFG_TXT = BASE_DIR + OSW_SWITCH + '.txt'
+OSW_CFG_TXT = BASE_DIR + OSW_SWITCH + '.txt'
 #VSW_CFG_TXT_IN = BASE_DIR + OSW_SWITCH + 'VSW.txt'
 #VCE_CFG_TXT_OUT = BASE_DIR + OSW_SWITCH + 'VCE_addendum.txt'
 VCE_CFG_TXT_IN = BASE_DIR + OSW_SWITCH + 'VCE.txt'
