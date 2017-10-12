@@ -9,26 +9,29 @@ import itertools
 ################# VARIABLES/CONSTANT #################
 ######################################################
 
-SWITCH = 'NAOSW133'
+SWITCH = 'GEOSW011'
 
 SHEET = SWITCH
 
 
 
-BASE_DIR = '/home/aspera/Documents/VF-2017/NMP/NA1C/' + SWITCH + '/Stage_3/'
+#BASE_DIR = '/home/aspera/Documents/VF-2017/NMP/NA1C/' + SWITCH + '/Stage_3/'
+BASE_DIR = '/mnt/hgfs/VM_shared/PY-LAB/GE01/' + SWITCH + '/Stage_3/'
 
 INPUT_XLS = BASE_DIR + SWITCH + '_OUT_DB_OPT.xlsx'
 OSW_CFG_TXT = BASE_DIR + SWITCH + '.txt'
 OSWVCE_CFG_TXT = BASE_DIR + SWITCH + 'VCE' +'.txt'
 OSWVSW_CFG_TXT = BASE_DIR + SWITCH + 'VSW' +'.txt'
 
-OTHER_SWITCH = 'NAOSW136'
-OTHER_BASE_DIR = '/home/aspera/Documents/VF-2017/NMP/NA1C/' + OTHER_SWITCH + '/Stage_3/'
+OTHER_SWITCH = 'GEOSW012'
+#OTHER_BASE_DIR = '/home/aspera/Documents/VF-2017/NMP/NA1C/' + OTHER_SWITCH + '/Stage_3/'
+
+OTHER_BASE_DIR = '/mnt/hgfs/VM_shared/PY-LAB/GE01/' + OTHER_SWITCH + '/Stage_3/'
 OTHER_INPUT_XLS = OTHER_BASE_DIR + OTHER_SWITCH + '_OUT_DB_OPT.xlsx'
 OTHER_SHEET = OTHER_SWITCH
 
 PO_OSW_OSW = r'^interface Port-channel1$'
-PO_OSW_VPE = r'^interface Port-channel133$'
+PO_OSW_VPE = r'^interface Port-channel111$'
 
 qos_sp_def_N9508_dict = {'U':' service-policy type qos input UNTRUST','T':' service-policy type qos input VF-INGRESS', 'S':' service-policy type qos input SIGNALLING','V':' service-policy type qos input VOICE', 'D':' service-policy type qos input 2G_3G_DATA', 'K':' service-policy type qos input POLICY_MGW'}
 qos_sp_def_N3048_dict = {'U':' service-policy type qos input UNTRUST','T':''                                         , 'S':' service-policy type qos input SIGNALLING','V':' service-policy type qos input VOICE', 'D':' service-policy type qos input 2G_3G_DATA'}
@@ -542,7 +545,9 @@ def  get_vlan_list_from_po(po):
     
     for y in spur_list2:
         if '-' in y:
-            po_vlan1.append(from_range_to_list(y)[0])
+            m = from_range_to_list(y)
+            for x in m:
+                po_vlan1.append(x)
         else:
             po_vlan1.append(y)
     
