@@ -570,7 +570,9 @@ def get_vlan_to_add():
     set_b = set(list_b)
     set_c = set(list_c)
 
-
+    # set_a | set_b --> Union
+    # set_a & set_b --> intersection
+    #
     #v_to_add = list(set_a | (set_b & set_c))
     v_to_add = list(set_b & set_c)
     v_to_add.sort(key=natural_keys)
