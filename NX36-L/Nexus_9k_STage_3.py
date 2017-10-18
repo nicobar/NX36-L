@@ -236,7 +236,8 @@ def get_normalized_if_OSWVCEVSW_cfg(if_ntbm, mig_dict, qos_sp_def_dict):
     cf_intf_list = [intf_obj.ioscfg + ['!'] for intf_obj in intf_obj_list]
     cf_intf_1 =  list(itertools.chain.from_iterable(cf_intf_list))
     cf_intf_2 = clean_if_cfg(cf_intf_1)
-    cf_intf = add_shutdown(cf_intf_2)
+    cf_intf_3 = add_nonegotiationauto(cf_intf_2)
+    cf_intf = add_shutdown(cf_intf_3)
     return cf_intf
      
      
@@ -293,6 +294,15 @@ def clean_if_cfg(cfg):
     cf_intf_list = [intf_obj.ioscfg + ['!'] for intf_obj in intf_obj_list]
     cf_intf =  list(itertools.chain.from_iterable(cf_intf_list))
     return cf_intf
+
+def add_nonegotiationauto(cfg):
+    ''' add to if cfg (lst) with "no auto negotiation" command if speed is present '''
+     
+    parse = c.CiscoConfParse(cfg)
+    
+    parse.insert_after_child(parentspec=r"^interface Ether", childspec=r"speed 100", insertstr = ' no negotiation auto')
+    parse.commit()
+    return parse.ioscfg
 
 def clean_hsrp_to_svi(svi_tbm_list, cfg):
     ''' translate HSRP from IOS to NS-OX '''
