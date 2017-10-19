@@ -16,7 +16,7 @@ SHEET = SWITCH
 
 
 #BASE_DIR = '/home/aspera/Documents/VF-2017/NMP/NA1C/' + SWITCH + '/Stage_3/'
-BASE_DIR = '/mnt/hgfs/VM_shared/PY-LAB/GE01/' + SWITCH + '/Stage_3/'
+BASE_DIR = '/mnt/hgfs/VM_shared/PY_GE_CHECK/GE01_NX36-L/' + SWITCH + '/Stage_3/'
 
 INPUT_XLS = BASE_DIR + SWITCH + '_OUT_DB_OPT.xlsx'
 OSW_CFG_TXT = BASE_DIR + SWITCH + '.txt'
@@ -26,7 +26,7 @@ OSWVSW_CFG_TXT = BASE_DIR + SWITCH + 'VSW' +'.txt'
 OTHER_SWITCH = 'GEOSW012'
 #OTHER_BASE_DIR = '/home/aspera/Documents/VF-2017/NMP/NA1C/' + OTHER_SWITCH + '/Stage_3/'
 
-OTHER_BASE_DIR = '/mnt/hgfs/VM_shared/PY-LAB/GE01/' + OTHER_SWITCH + '/Stage_3/'
+OTHER_BASE_DIR = '/mnt/hgfs/VM_shared/PY_GE_CHECK/GE01_NX36-L/' + OTHER_SWITCH + '/Stage_3/'
 OTHER_INPUT_XLS = OTHER_BASE_DIR + OTHER_SWITCH + '_OUT_DB_OPT.xlsx'
 OTHER_SHEET = OTHER_SWITCH
 
@@ -518,14 +518,15 @@ def get_if_xls_guardroot():
     return if_gr
 
 def get_if_to_qos_xls_dict():
-    ''' Return intf list if root_guard == 'Yes' '''
+    ''' Return {intf : QoS} dict '''
     
     wb_r = load_workbook(INPUT_XLS)
     ws_r = wb_r.get_sheet_by_name(SHEET)
     DST_VCE_IF_COL = 2
     QOS_COL = 5
     
-    qos_gr =  {str(ws_r.cell(row=r, column=DST_VCE_IF_COL).value) : str(ws_r.cell(row=r, column=QOS_COL).value) for r in range(2, ws_r.max_row + 1) if str(ws_r.cell(row=r, column=QOS_COL).value) != 'No'}
+    #qos_gr =  {str(ws_r.cell(row=r, column=DST_VCE_IF_COL).value) : str(ws_r.cell(row=r, column=QOS_COL).value) for r in range(2, ws_r.max_row + 1) if str(ws_r.cell(row=r, column=QOS_COL).value) != 'No'}
+    qos_gr =  {str(ws_r.cell(row=r, column=DST_VCE_IF_COL).value) : str(ws_r.cell(row=r, column=QOS_COL).value) for r in range(2, ws_r.max_row + 1) }
    
     return qos_gr
 
