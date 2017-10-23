@@ -13,10 +13,10 @@ SWITCH = 'GEOSW011'
 
 SHEET = SWITCH
 
-
+#/mnt/hgfs/VM_shared/PY-LAB/GE01/
 
 #BASE_DIR = '/home/aspera/Documents/VF-2017/NMP/NA1C/' + SWITCH + '/Stage_3/'
-BASE_DIR = '/mnt/hgfs/VM_shared/PY_GE_CHECK/GE01_NX36-L/' + SWITCH + '/Stage_3/'
+BASE_DIR = '/mnt/hgfs/VM_shared/PY_GE_CHECK/GE01_nol3on3k/' + SWITCH + '/Stage_3/'
 
 INPUT_XLS = BASE_DIR + SWITCH + '_OUT_DB_OPT.xlsx'
 OSW_CFG_TXT = BASE_DIR + SWITCH + '.txt'
@@ -26,7 +26,7 @@ OSWVSW_CFG_TXT = BASE_DIR + SWITCH + 'VSW' +'.txt'
 OTHER_SWITCH = 'GEOSW012'
 #OTHER_BASE_DIR = '/home/aspera/Documents/VF-2017/NMP/NA1C/' + OTHER_SWITCH + '/Stage_3/'
 
-OTHER_BASE_DIR = '/mnt/hgfs/VM_shared/PY_GE_CHECK/GE01_NX36-L/' + OTHER_SWITCH + '/Stage_3/'
+OTHER_BASE_DIR = '/mnt/hgfs/VM_shared/PY_GE_CHECK/GE01_nol3on3k/' + OTHER_SWITCH + '/Stage_3/'
 OTHER_INPUT_XLS = OTHER_BASE_DIR + OTHER_SWITCH + '_OUT_DB_OPT.xlsx'
 OTHER_SHEET = OTHER_SWITCH
 
@@ -620,15 +620,17 @@ print ("if_not_to_be_migrated_N3048 = " , if_not_to_be_migrated_N3048)
 
 ################ VLAN CANDIDATE ##############
 
-candidate_vlan_xls_N9508, candidate_vlan_xls_N3048 = get_vlan_from_xls()
-vlan_cfg = get_vlan_from_cfg()
+candidate_vlan_xls_N9508, candidate_vlan_xls_N3048 = get_vlan_from_xls() # all VLAN from xls (no voice trunks and legacy PO)
+candidate_vlan_xls_N9508 = list(set(candidate_vlan_xls_N9508) | set(candidate_vlan_xls_N3048))
+candidate_vlan_xls_N9508.sort(key=natural_keys)
+vlan_cfg = get_vlan_from_cfg() # all vlan from CFG, even those NTBM
 
 print ("candidate_vlan_xls_N9508 = ", candidate_vlan_xls_N9508)
 print ("candidate_vlan_xls_N3048 = ", candidate_vlan_xls_N3048)
 
 vlan_to_add = get_vlan_to_add() # these are MP VLAN in po_ose2ose and po_osw_vpe, not in access or trunk
 candidate_vlan_xls_N9508 += vlan_to_add
-
+candidate_vlan_xls_N9508.sort(key=natural_keys)
 
 ## --> vlan_on_N9508 = set(vlan_xls_N9508) | ( set(VLAN_xls_N3048) -set( real_svi_on_N3048)) ultima parentesi sono le VLAN su 3048 che devono essere anche sul 9508 e sono le vlan del3048 a meno delle svi del 3048
 
@@ -643,97 +645,102 @@ print ("candidate_vlan_not_to_be_migrated_N3048 = " , candidate_vlan_not_to_be_m
 
 svi_from_cfg = get_svi_from_cfg()
 candidate_svi_on_N9508 = get_svi_on_device(candidate_vlan_xls_N9508, svi_from_cfg)
-candidate_svi_on_N3048 = get_svi_on_device(candidate_vlan_xls_N3048, svi_from_cfg)
+#candidate_svi_on_N3048 = get_svi_on_device(candidate_vlan_xls_N3048, svi_from_cfg)
 
 print ("svi_from_cfg = " , svi_from_cfg)
 print ("candidate_svi_on_N9508 = " , candidate_svi_on_N9508)
-print ("candidate_svi_on_N3048 = " , candidate_svi_on_N3048)
+#print ("candidate_svi_on_N3048 = " , candidate_svi_on_N3048)
 
 candidate_svi_not_to_be_migrated_N9508 = get_list_not_to_be_migrated(candidate_svi_on_N9508, svi_from_cfg)
-candidate_svi_not_to_be_migrated_N3048 = get_list_not_to_be_migrated(candidate_svi_on_N3048, svi_from_cfg)
+#candidate_svi_not_to_be_migrated_N3048 = get_list_not_to_be_migrated(candidate_svi_on_N3048, svi_from_cfg)
 
 print ("candidate_svi_not_to_be_migrated_N9508 = ", candidate_svi_not_to_be_migrated_N9508)
-print ("candidate_svi_not_to_be_migrated_N3048 = ", candidate_svi_not_to_be_migrated_N3048)
+#print ("candidate_svi_not_to_be_migrated_N3048 = ", candidate_svi_not_to_be_migrated_N3048)
 
 
 
-svi_on_N3048 =  get_svi_with_static_on_N3048(routes, candidate_svi_on_N3048)
-print (svi_on_N3048)
+#svi_on_N3048 =  get_svi_with_static_on_N3048(routes, candidate_svi_on_N3048)
+#print (svi_on_N3048)
 
 ################ REAL VLAN  ##############
 
-vlan_on_N9508 = list(set(candidate_vlan_xls_N9508) | ( set(candidate_vlan_xls_N3048) - set(svi_on_N3048)))  # ultima parentesi sono le VLAN su 3048 che devono essere anche sul 9508 e sono le vlan del3048 a meno delle svi del 3048
+#vlan_on_N9508 = list(set(candidate_vlan_xls_N9508) | ( set(candidate_vlan_xls_N3048) - set(svi_on_N3048)))  # ultima parentesi sono le VLAN su 3048 che devono essere anche sul 9508 e sono le vlan del3048 a meno delle svi del 3048
+vlan_on_N9508 = list(set(candidate_vlan_xls_N9508) | ( set(candidate_vlan_xls_N3048) ))
 vlan_on_N9508.sort(key=natural_keys)
-vlan_on_N3048 = candidate_vlan_xls_N3048
+vlan_on_N3048 = candidate_vlan_xls_N3048[:]
 
 print ("vlan_on_N9508 = ", vlan_on_N9508)
-print ("vlan_on_N3048 (candidate_vlan_xls_N3048)  = ", vlan_on_N3048)
+print ("vlan_on_N3048 = ", vlan_on_N3048)
 
 vlan_not_to_be_migrated_N9508 = get_list_not_to_be_migrated(vlan_on_N9508, vlan_cfg)
-vlan_not_to_be_migrated_N3048 = candidate_vlan_not_to_be_migrated_N3048
+vlan_not_to_be_migrated_N3048 = candidate_vlan_not_to_be_migrated_N3048[:]
 
 ################ MAIN IF #############
 
 net_in_area_dict = get_net_in_area()
 svi_to_area_dict = get_svi_to_area(net_in_area_dict)
 
-if len(svi_on_N3048) > 0: # are there svi on N3048 ??
-    svi_on_N9508 = list (set(candidate_svi_on_N9508) - set(svi_on_N3048))
-    svi_on_N9508.sort(key=natural_keys)
-#    svi_on_N3048 = real_svi_on_N3048
+# if len(svi_on_N3048) > 0: # are there svi on N3048 ??
+#     svi_on_N9508 = list (set(candidate_svi_on_N9508) - set(svi_on_N3048))
+#     svi_on_N9508.sort(key=natural_keys)
+# #    svi_on_N3048 = real_svi_on_N3048
+# 
+#     print ("svi_on_N9508 = " , svi_on_N9508)
+#     print ("svi_on_N3048 = " , svi_on_N3048)
+#     
+#     svi_not_to_be_migrated_N9508 = get_list_not_to_be_migrated(svi_on_N9508, svi_from_cfg)
+#     svi_not_to_be_migrated_N3048 = get_list_not_to_be_migrated(svi_on_N3048, svi_from_cfg)
+#     
+#     print ("svi_not_to_be_migrated_N9508 = ", svi_not_to_be_migrated_N9508)
+#     print ("svi_not_to_be_migrated_N3048 = ", svi_not_to_be_migrated_N3048)    
+#     
+#     migr_dict_N9508 = get_migration_dictionary_N9508()
+#     cfg_intf_N9508 = get_normalized_if_OSWVCEVSW_cfg(if_not_to_be_migrated_N9508, migr_dict_N9508, qos_sp_def_N9508_dict)
+#     cfg_vlan_N9508 = get_normalized_vlan_OSWVCEVSW_cfg(vlan_not_to_be_migrated_N9508)
+#     cfg_svi_N9508 = get_normalized_svi_OSWVCEVSW_cfg(svi_not_to_be_migrated_N9508, svi_on_N9508)
+#     cfg_svi_and_ospf_N9508 = add_ospf_to_svi_cfg(cfg_svi_N9508,svi_on_N9508,svi_to_area_dict) # from cfg_svi_N9508 could get svi_on_N9508 via ciscoconfparse
+#     routes_for_N9508 = get_routes_for_devices(routes, svi_on_N9508)
+#     
+#     
+#     migr_dict_N3048 = get_migration_dictionary_N3048()
+#     cfg_intf_N3048 = get_normalized_if_OSWVCEVSW_cfg(if_not_to_be_migrated_N3048, migr_dict_N3048, qos_sp_def_N3048_dict)
+#     cfg_vlan_N3048 = get_normalized_vlan_OSWVCEVSW_cfg(vlan_not_to_be_migrated_N3048)
+#     cfg_svi_N3048 = get_normalized_svi_OSWVCEVSW_cfg(svi_not_to_be_migrated_N3048, svi_on_N3048)
+#     cfg_svi_and_ospf_N3048 = add_ospf_to_svi_cfg(cfg_svi_N3048,svi_on_N3048,svi_to_area_dict)
+#     routes_for_N3048 = get_routes_for_devices(routes, svi_on_N3048)
+    
+#else: # if not
+    
+#svi_on_N9508 = list (set(candidate_svi_on_N9508) | set(candidate_svi_on_N3048))
+svi_on_N9508 = candidate_svi_on_N9508[:]
+svi_on_N9508.sort(key=natural_keys) 
+#print "candidate_svi_on_N9508 = ", candidate_svi_on_N9508
+#print "candidate_svi_on_N3048 = ", candidate_svi_on_N3048
+print ("svi_on_N9508 = ", svi_on_N9508)
 
-    print ("svi_on_N9508 = " , svi_on_N9508)
-    print ("svi_on_N3048 = " , svi_on_N3048)
+svi_not_to_be_migrated_N9508 = get_list_not_to_be_migrated(svi_on_N9508, svi_from_cfg)
+
+migr_dict_N9508 = get_migration_dictionary_N9508()
+cfg_intf_N9508 = get_normalized_if_OSWVCEVSW_cfg(if_not_to_be_migrated_N9508, migr_dict_N9508, qos_sp_def_N9508_dict)
+cfg_vlan_N9508 = get_normalized_vlan_OSWVCEVSW_cfg(vlan_not_to_be_migrated_N9508)
+cfg_svi_N9508 = get_normalized_svi_OSWVCEVSW_cfg(svi_not_to_be_migrated_N9508, svi_on_N9508)
+cfg_svi_and_ospf_N9508 = add_ospf_to_svi_cfg(cfg_svi_N9508,svi_on_N9508,svi_to_area_dict) # from cfg_svi_N9508 could get svi_on_N9508 via ciscoconfparse
+routes_for_N9508 = get_routes_for_devices(routes, svi_on_N9508)
+
+migr_dict_N3048 = get_migration_dictionary_N3048()
+cfg_intf_N3048 = get_normalized_if_OSWVCEVSW_cfg(if_not_to_be_migrated_N3048, migr_dict_N3048, qos_sp_def_N3048_dict)
+cfg_vlan_N3048 = get_normalized_vlan_OSWVCEVSW_cfg(vlan_not_to_be_migrated_N3048)
+#cfg_svi_and_ospf_N3048 = ['!']
+#routes_for_N3048 = ['!']
     
-    svi_not_to_be_migrated_N9508 = get_list_not_to_be_migrated(svi_on_N9508, svi_from_cfg)
-    svi_not_to_be_migrated_N3048 = get_list_not_to_be_migrated(svi_on_N3048, svi_from_cfg)
-    
-    print ("svi_not_to_be_migrated_N9508 = ", svi_not_to_be_migrated_N9508)
-    print ("svi_not_to_be_migrated_N3048 = ", svi_not_to_be_migrated_N3048)    
-    
-    migr_dict_N9508 = get_migration_dictionary_N9508()
-    cfg_intf_N9508 = get_normalized_if_OSWVCEVSW_cfg(if_not_to_be_migrated_N9508, migr_dict_N9508, qos_sp_def_N9508_dict)
-    cfg_vlan_N9508 = get_normalized_vlan_OSWVCEVSW_cfg(vlan_not_to_be_migrated_N9508)
-    cfg_svi_N9508 = get_normalized_svi_OSWVCEVSW_cfg(svi_not_to_be_migrated_N9508, svi_on_N9508)
-    cfg_svi_and_ospf_N9508 = add_ospf_to_svi_cfg(cfg_svi_N9508,svi_on_N9508,svi_to_area_dict) # from cfg_svi_N9508 could get svi_on_N9508 via ciscoconfparse
-    routes_for_N9508 = get_routes_for_devices(routes, svi_on_N9508)
-    
-    
-    migr_dict_N3048 = get_migration_dictionary_N3048()
-    cfg_intf_N3048 = get_normalized_if_OSWVCEVSW_cfg(if_not_to_be_migrated_N3048, migr_dict_N3048, qos_sp_def_N3048_dict)
-    cfg_vlan_N3048 = get_normalized_vlan_OSWVCEVSW_cfg(vlan_not_to_be_migrated_N3048)
-    cfg_svi_N3048 = get_normalized_svi_OSWVCEVSW_cfg(svi_not_to_be_migrated_N3048, svi_on_N3048)
-    cfg_svi_and_ospf_N3048 = add_ospf_to_svi_cfg(cfg_svi_N3048,svi_on_N3048,svi_to_area_dict)
-    routes_for_N3048 = get_routes_for_devices(routes, svi_on_N3048)
-    
-else: # if not
-    
-    svi_on_N9508 = list (set(candidate_svi_on_N9508) | set(candidate_svi_on_N3048))
-    svi_on_N9508.sort(key=natural_keys) 
-    #print "candidate_svi_on_N9508 = ", candidate_svi_on_N9508
-    #print "candidate_svi_on_N3048 = ", candidate_svi_on_N3048
-    print ("svi_on_N9508 = ", svi_on_N9508)
-    
-    svi_not_to_be_migrated_N9508 = get_list_not_to_be_migrated(svi_on_N9508, svi_from_cfg)
-    
-    migr_dict_N9508 = get_migration_dictionary_N9508()
-    cfg_intf_N9508 = get_normalized_if_OSWVCEVSW_cfg(if_not_to_be_migrated_N9508, migr_dict_N9508, qos_sp_def_N9508_dict)
-    cfg_vlan_N9508 = get_normalized_vlan_OSWVCEVSW_cfg(vlan_not_to_be_migrated_N9508)
-    cfg_svi_N9508 = get_normalized_svi_OSWVCEVSW_cfg(svi_not_to_be_migrated_N9508, svi_on_N9508)
-    cfg_svi_and_ospf_N9508 = add_ospf_to_svi_cfg(cfg_svi_N9508,svi_on_N9508,svi_to_area_dict) # from cfg_svi_N9508 could get svi_on_N9508 via ciscoconfparse
-    routes_for_N9508 = get_routes_for_devices(routes, svi_on_N9508)
-    
-    migr_dict_N3048 = get_migration_dictionary_N3048()
-    cfg_intf_N3048 = get_normalized_if_OSWVCEVSW_cfg(if_not_to_be_migrated_N3048, migr_dict_N3048, qos_sp_def_N3048_dict)
-    cfg_vlan_N3048 = get_normalized_vlan_OSWVCEVSW_cfg(vlan_not_to_be_migrated_N3048)
-    cfg_svi_and_ospf_N3048 = ['!']
-    routes_for_N3048 = ['!']
+# IF-ELSE len(svi_on_N3048) SNDED HERE
 
 cfg_N9508 = cfg_vlan_N9508 + cfg_intf_N9508 + cfg_svi_and_ospf_N9508  + routes_for_N9508
 parse_out_N9508 =  c.CiscoConfParse(cfg_N9508)
 parse_out_N9508.save_as(OSWVCE_CFG_TXT)
 
-cfg_N3048 = cfg_vlan_N3048 + cfg_intf_N3048 + cfg_svi_and_ospf_N3048 + routes_for_N3048
+#cfg_N3048 = cfg_vlan_N3048 + cfg_intf_N3048 + cfg_svi_and_ospf_N3048 + routes_for_N3048
+cfg_N3048 = cfg_vlan_N3048 + cfg_intf_N3048 
 parse_out_N3048 =  c.CiscoConfParse(cfg_N3048)
 parse_out_N3048.save_as(OSWVSW_CFG_TXT)
 print ("done write")
