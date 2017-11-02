@@ -353,8 +353,9 @@ VPE_ROUTER =    'NAVPE113'
 VCE_SWITCH =    'NAVCE131'
 BRIDGE_NAME =   '10.192.10.8'
 
-
-BASE_DIR = '/home/aspera/Documents/VF-2017/NMP/NA1C/' + OSW_SWITCH + '/Stage_4/VCE/'
+BASE = '/mnt/hgfs/VM_shared/VF-2017/NMP/'
+SITE = 'BO01/'
+BASE_DIR = BASE + SITE + OSW_SWITCH + '/Stage_4/VCE/'
 
 
 #INPUT_XLS = BASE_DIR + OSW_SWITCH + '_OUT_DB_OPT.xlsx'

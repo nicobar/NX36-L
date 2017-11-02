@@ -13,10 +13,10 @@ SWITCH = 'GEOSW011'
 
 SHEET = SWITCH
 
-#/mnt/hgfs/VM_shared/PY-LAB/GE01/
 
-#BASE_DIR = '/home/aspera/Documents/VF-2017/NMP/NA1C/' + SWITCH + '/Stage_3/'
-BASE_DIR = '/mnt/hgfs/VM_shared/PY_GE_CHECK/GE01_nol3on3k/' + SWITCH + '/Stage_3/'
+BASE = '/mnt/hgfs/VM_shared/VF-2017/NMP/'
+SITE = 'BO01/'
+BASE_DIR = BASE + SITE + SWITCH + '/Stage_3/'
 
 INPUT_XLS = BASE_DIR + SWITCH + '_OUT_DB_OPT.xlsx'
 OSW_CFG_TXT = BASE_DIR + SWITCH + '.txt'
@@ -26,7 +26,8 @@ OSWVSW_CFG_TXT = BASE_DIR + SWITCH + 'VSW' +'.txt'
 OTHER_SWITCH = 'GEOSW012'
 #OTHER_BASE_DIR = '/home/aspera/Documents/VF-2017/NMP/NA1C/' + OTHER_SWITCH + '/Stage_3/'
 
-OTHER_BASE_DIR = '/mnt/hgfs/VM_shared/PY_GE_CHECK/GE01_nol3on3k/' + OTHER_SWITCH + '/Stage_3/'
+
+OTHER_BASE_DIR = BASE + SITE + OTHER_SWITCH + '/Stage_3/'
 OTHER_INPUT_XLS = OTHER_BASE_DIR + OTHER_SWITCH + '_OUT_DB_OPT.xlsx'
 OTHER_SHEET = OTHER_SWITCH
 

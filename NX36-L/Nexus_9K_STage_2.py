@@ -10,10 +10,12 @@ TYPE = 'Type2'
 #TYPE = 'Type3'
 #TYPE = 'Type4'
 
-SHEET = SWITCH
-#BASE_DIR = '/home/aspera/Documents/Clienti/VF-2017/NMP/NA1C-C/' + SWITCH + '/Stage_2/'
 
-BASE_DIR = '/home/aspera/Documents/VF-2017/NMP/NA1C/' + SWITCH + '/Stage_2/'
+
+
+BASE = '/mnt/hgfs/VM_shared/VF-2017/NMP/'
+SITE = 'BO01/'
+BASE_DIR = BASE + SITE + SWITCH + '/Stage_2/'
 
 INPUT_XLS = BASE_DIR + SWITCH + '_OUT_DB_OPT.xlsx'
 

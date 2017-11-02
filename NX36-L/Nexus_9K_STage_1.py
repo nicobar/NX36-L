@@ -12,7 +12,9 @@ import re
 SWITCH = 'GEOSW011'
 #INFRA_CH_GRP_LIST = [1,133]
 SHEET = SWITCH
-BASE_DIR = '/home/aspera/Documents/VF-2017/NMP/GE01/' + SWITCH + '/Stage_1/'
+BASE = '/mnt/hgfs/VM_shared/VF-2017/NMP/'
+SITE = 'BO01/'
+BASE_DIR = BASE + SITE + SWITCH + '/Stage_1/'
 
 
 INPUT_XLS = BASE_DIR + SWITCH + '_DB_MIGRATION.xlsx'
@@ -227,6 +229,7 @@ def colour_output_xlsx():
 
 def get_descr(if_cfg):
     
+    desc_from_cfg = ''
     for elem in if_cfg:
         if elem[1:12] == 'description':
             desc_from_cfg = str.strip(elem[13:])    
