@@ -13,10 +13,10 @@ def natural_keys(text):
     http://nedbatchelder.com/blog/200712/human_sorting.html
     (See Toothy's implementation in the comments)
     '''
-    return [ atoi(c) for c in re.split('(\d+)', text) ]
-          
+    return [atoi(c) for c in re.split('(\d+)', text)]
 
 def create_if_subif_map():
+    ''' Creates dict {interface_trunk: ['vlan1', ..., 'vlanN]' } '''
     
     mymap = {}
      
@@ -46,25 +46,52 @@ def get_vlan_to_be_migrated():
 
 def get_vlan_string(mylist, my_vlan_tbm):
 
-    vlan_list_of_string = [ ','.join(vlan_list) for vlan_list in mylist ]
+    vlan_list_of_string = [','.join(vlan_list) for vlan_list in mylist ]
     vlan_string_h1 = ','.join(vlan_list_of_string)
 
     
     vlan_string_h2 = vlan_string_h1.split(',')
-    vlan_string_h2.sort(key=natural_keys)    
+    vlan_string_h2.sort(key=natural_keys)
     vlan_string_h1 = [ x for x in vlan_string_h2 if x in my_vlan_tbm ]
-    
-    vlan_string = ','.join(vlan_string_h1)    
-    
+
+    vlan_string = ','.join(vlan_string_h1)
+
     return vlan_string
+
+def check_vlan_consistency(my_subif_map, my_vlan_tbm):
+    ''' Checks if VLAN on trunks are the same as those defined in VLAN db '''
+
+    a = set()
+
+    for elem in my_subif_map.keys():
+        for tag in my_subif_map[elem]:
+            a.add(tag)
+
+    b = set(my_vlan_tbm)
+
+    my_diff = list(a - b)
+    my_diff.sort(key=natural_keys)
+
+    if len(my_diff) > 0:
+        print('ATTENZIONE: Non tutte Le VLANs allowed sui trunk dai PE sono definite nel VLAN DB')
+        print('Le VLAN non definite sono: {}'.format(my_diff))
+    elif list(a) == list(b):
+        print('Le VLANs sui trunk coincidono con le VLANs nel VLAN DB')
+    else:
+        my_diff = list(b - a)
+        my_diff.sort(key=natural_keys)
+        print('ATTENZIONE: le seguenti VLANs sono definite in VLAN DB ma non sui trunk')
+        print('Le VLAN non definite sono: {}'.format(my_diff))
+
 
 def get_po_vce():
     ''' get vlan from VPE subif and check if are in vlan_to_be_migrated_set '''
     
     if_subif_map = create_if_subif_map()
     
-
     vlan_tbm = get_vlan_to_be_migrated()
+    
+    check_vlan_consistency(if_subif_map, vlan_tbm)
     
     real_vlan_tbm = get_vlan_string(if_subif_map.values(), vlan_tbm)
     
@@ -98,7 +125,8 @@ def get_switch_mac_address():
     cmd = 'show spanning-tree bridge address'
    
     
-    lst = get_remote_cmd(OSW_SWITCH, cmd)
+    file_name = get_remote_cmd(OSW_SWITCH, cmd)
+    lst = from_file_to_cfg_as_list(file_name)
     if lst != None:
         mac = lst[1].split()[1]
     else:
@@ -109,7 +137,10 @@ def get_rb_per_vlan():
     ''' return a map {vlan: mac} '''
     
     cmd = 'show spanning-tree root brief'
-    show_list = get_remote_cmd(OSW_SWITCH, cmd)
+    
+    file_name = get_remote_cmd(OSW_SWITCH, cmd)
+    show_list = from_file_to_cfg_as_list(file_name)
+    
     mp = {}
     
     for elem in show_list:
@@ -134,7 +165,7 @@ def time_string():
 
 
 def get_remote_cmd(device, command):
-    # return a list containig show command of device dev
+    ''' Return a file_name containing show command of device dev '''
     my_time = time_string()
     cmd_telnet_node   = 'telnet ' + device
     cmd_telnet_bridge = 'telnet ' + BRIDGE_NAME
@@ -142,7 +173,7 @@ def get_remote_cmd(device, command):
     filename_out = BASE_DIR  + nname_time +'_' + str.replace(command, ' ', '_')  + '.txt'
     fout = open(filename_out ,'w')
     lower_string_to_expect = OSW_SWITCH + '#'
-    show_cmd = []
+#    show_cmd = []
      
     string_to_expect = str.upper(lower_string_to_expect)
     try:
@@ -174,13 +205,22 @@ def get_remote_cmd(device, command):
         child.terminate() 
         fout.close() 
         
-        for elem in open(filename_out ,'r'):
-            show_cmd.append(elem.rstrip())
-        return show_cmd
+#        for elem in open(filename_out ,'r'):
+#            show_cmd.append(elem.rstrip())
+#        return show_cmd
+        return filename_out
         
     except pexpect.exceptions.TIMEOUT:
         print ('ERROR: Connect to VPN before launching this script')       
         return None
+
+def from_file_to_cfg_as_list(file_name):
+    ''' return a list containing text of file_name '''
+    show_cmd = []
+
+    for elem in open(file_name, 'r'):
+        show_cmd.append(elem.rstrip())
+    return show_cmd
 
 def get_stp_conf():
     
@@ -257,7 +297,6 @@ def get_po_vce_vce_700():
     #for v in vlan1:
     #    vlan_semifinal1.append(v.split()[1])
     vlan_semifinal1 = get_vlan_to_be_migrated()
-    
     
     po_obj = parse_osw.find_objects(r'^interface ' + PO_OSW_MATE)
     po_cfg = po_obj[0].ioscfg
