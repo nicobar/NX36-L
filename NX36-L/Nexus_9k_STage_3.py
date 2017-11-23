@@ -9,14 +9,14 @@ import itertools
 ################# VARIABLES/CONSTANT #################
 ######################################################
 
-SWITCH = 'GEOSW011'
+SWITCH = 'BOOSW013'
 
 SHEET = SWITCH
 
 VLAN_FROM_XLS = True  # IF TRUE THEN XLS IS TRUSTABLE AS TRUSTED VLAN' SOURCE
 
-BASE = '/mnt/hgfs/VM_shared/VF-2017/XLS4VLAN/'
-SITE = 'GE01/'
+BASE = '/mnt/hgfs/VM_shared/VF-2017/NMP/'
+SITE = 'BO01/'
 BASE_DIR = BASE + SITE + SWITCH + '/Stage_3/'
 
 INPUT_XLS = BASE_DIR + SWITCH + '_OUT_DB_OPT.xlsx'
@@ -24,7 +24,7 @@ OSW_CFG_TXT = BASE_DIR + SWITCH + '.txt'
 OSWVCE_CFG_TXT = BASE_DIR + SWITCH + 'VCE' + '.txt'
 OSWVSW_CFG_TXT = BASE_DIR + SWITCH + 'VSW' + '.txt'
 
-OTHER_SWITCH = 'GEOSW012'
+OTHER_SWITCH = 'BOOSW016'
 
 
 OTHER_BASE_DIR = BASE + SITE + OTHER_SWITCH + '/Stage_3/'
@@ -32,7 +32,7 @@ OTHER_INPUT_XLS = OTHER_BASE_DIR + OTHER_SWITCH + '_OUT_DB_OPT.xlsx'
 OTHER_SHEET = OTHER_SWITCH
 
 PO_OSW_OSW = r'^interface Port-channel1$'
-PO_OSW_VPE = r'^interface Port-channel111$'
+PO_OSW_VPE = r'^interface Port-channel113$'
 
 qos_sp_def_N9508_dict = {
     'U': ' service-policy type qos input UNTRUST',
@@ -223,8 +223,7 @@ def get_svi_from_cfg():
 
 
 def get_svi_on_device(vlanxls, svi_from_cfg):
-    ''' creates a list of svi interface that are both in cfg as svi and 
-    in xls as vlan '''
+    ''' creates a list of svi interface that are both in cfg as svi and in xls as vlan '''
 
     a = [x for x in svi_from_cfg if x in vlanxls]
     a.sort(key=natural_keys)
@@ -322,8 +321,10 @@ def get_normalized_vlan_OSWVCEVSW_cfg(vlan_ntbm):
     cf_vlan = list(itertools.chain.from_iterable(cf_vlan_list))
     return cf_vlan
 
+#def get_normalized_svi_OSWVCEVSW_cfg(svi_ntbm, svi_on_device):
 
-def get_normalized_svi_OSWVCEVSW_cfg(svi_ntbm, svi_on_device):
+
+def get_normalized_svi_OSWVCEVSW_cfg(svi_ntbm):
     ''' return cfg as list of svi  '''
 
     parse = c.CiscoConfParse(OSW_CFG_TXT)
@@ -339,7 +340,8 @@ def get_normalized_svi_OSWVCEVSW_cfg(svi_ntbm, svi_on_device):
     svi_obj_list = parse.find_objects(r'^interface Vlan')
     cf_svi_list = [svi_obj.ioscfg + ['!'] for svi_obj in svi_obj_list]
     cf_svi_1 = list(itertools.chain.from_iterable(cf_svi_list))
-    cf_svi_2 = clean_hsrp_to_svi(svi_on_device, cf_svi_1)
+    #cf_svi_2 = clean_hsrp_to_svi(svi_on_device, cf_svi_1)
+    cf_svi_2 = clean_hsrp_to_svi(cf_svi_1)
     cf_svi = add_shutdown(cf_svi_2)
     return cf_svi
 
@@ -350,7 +352,10 @@ def clean_if_cfg(cfg):
     parse = c.CiscoConfParse(cfg)
     command_to_be_deleted = (
         r'no cdp enable',
-        r'spanning-tree bpduguard enable')
+        r'spanning-tree bpduguard enable',
+        r'no ip address',
+        r'switchport trunk encapsulation dot1q',
+        r'speed nonegotiate')
 
     intf_obj_list = parse.find_objects(r'^interface')
     for intf_obj in intf_obj_list:
@@ -371,12 +376,14 @@ def add_nonegotiationauto(cfg):
     parse.insert_after_child(
         parentspec=r"^interface Ether",
         childspec=r"speed 100",
-        insertstr=' no negotiation auto')
+        insertstr=' no negotiate auto')
     parse.commit()
     return parse.ioscfg
 
+#def clean_hsrp_to_svi(svi_tbm_list, cfg):
 
-def clean_hsrp_to_svi(svi_tbm_list, cfg):
+
+def clean_hsrp_to_svi(cfg):
     ''' translate HSRP from IOS to NS-OX '''
 
     config_svi_to_add = []
@@ -464,24 +471,24 @@ def get_cleaned_routes():  # return a list of cleaned (with egress interfaces) r
     return new_route_list + ['!']
 
 
-def get_svi_with_static_on_N3048(static_routes, svi_on_vsw):
-    ''' return a list of svi that are egress intf in static routes  '''
-
-    real_svi_on_vsw = []
-    for route in static_routes:
-        svi = route.split(' ')
-        if len(svi) >= 6:
-            out_svi = re.findall(r'(\d+)', svi[6])[0]
-            if out_svi in svi_on_vsw:
-                real_svi_on_vsw.append(out_svi)
-
-    return real_svi_on_vsw
+# def get_svi_with_static_on_N3048(static_routes, svi_on_vsw):
+#     ''' return a list of svi that are egress intf in static routes  '''
+#
+#     real_svi_on_vsw = []
+#     for route in static_routes:
+#         svi = route.split(' ')
+#         if len(svi) >= 6:
+#             out_svi = re.findall(r'(\d+)', svi[6])[0]
+#             if out_svi in svi_on_vsw:
+#                 real_svi_on_vsw.append(out_svi)
+#
+#     return real_svi_on_vsw
 
 
 def get_routes_for_devices(static_routes, real_svi_on_device):
     ''' return a list of routes whose egress if are referenced in static routes   '''
 
-    real_routes_on_device = ['!', 'vrf context OPNET']
+    real_routes_on_device = ['\n' + 10 * '#' + " 6500's routes here below " + 1 * '#' + '\n']
     for route in static_routes:
         svi = route.split(' ')
         if len(svi) >= 6:
@@ -574,7 +581,7 @@ def add_ospf_to_svi_cfg(svi_conf_list, svi_on_device, d_svi_to_area):
                         svi_with_ospf_conf.append(
                             ' ip router ospf 249 area ' + str(d_svi_to_area['interface Vlan' + vlan_svi]))
 
-                    elif d_svi_to_area[int_svi] == '' or isinstance(d_svi_to_area[int_svi], str) == False:
+                    elif d_svi_to_area[int_svi] == '' or isinstance(d_svi_to_area[int_svi], str) is False:
                         svi_with_ospf_conf.append(' vrf member OPNET')
                         svi_with_ospf_conf.append(line)
 
@@ -619,14 +626,14 @@ def get_if_to_qos_xls_dict():
 
 def from_range_to_list(range_str):
 
-    l = []
+    mylist = []
 
     h_l = range_str.split('-')
     start = int(h_l[0])
     stop = int(h_l[1])
     for x in range(start, stop + 1):
-        l.append(str(x))
-    return l
+        mylist.append(str(x))
+    return mylist
 
 
 def get_vlan_list_from_po(po):
@@ -683,6 +690,44 @@ def get_vlan_to_add():
     print("VLAN list MUST BE PRESENT on this OSW withouth access/trunk if", vv_to_add)
 
     return vv_to_add
+
+
+def transform_routes_for_nexus(routes):
+    '''        0   1     2     3       4     5  6   7      8      9      10
+        from <ip route prefix mask interface nh ad tag tag_value name name_value>
+        to   <ip route prefix mask interface nh name name_value tag tag_value ad>
+    '''
+    new_route_list = []
+    n9k_routes = ['!', 'vrf context OPNET']
+    for route in routes[1:]:  # first line is a speratore string made of #
+        route_list = route.split()
+        if len(route_list) == 11:  # complete
+            new_route_list = route_list[:6] + [' '.join(route_list[-2:])] + [' '.join(route_list[-4:-2])] + [route_list[6]]
+        elif len(route_list) == 10:  # ad missed
+            new_route_list = route_list[:6] + [' '.join(route_list[-2:])] + [' '.join(route_list[-4:-2])]
+        elif len(route_list) == 9:  # tag or name missing
+            if route_list[7] == 'tag':
+                new_route_list = route_list[:6] + [' '.join(route_list[-2:])] + [route_list[6]]
+            elif route_list[7] == 'name':
+                new_route_list = route_list[:6] + [' '.join(route_list[-2:])] + [route_list[6]]
+        elif len(route_list) == 8:  # ad and tag or name missing
+            new_route_list = route_list
+        elif len(route_list) == 7:  # tag and name missing
+            new_route_list = route_list
+        elif len(route_list) == 6:  # ad tag and name missing
+            new_route_list = route_list
+        elif len(route_list) == 3 and route_list[0] == 'vrf':
+            continue
+        elif len(route_list) == 1 and route_list[0] == '!':
+            continue
+        else:
+            new_route_list = ['ERRORE']
+
+        new_route_string = ' '.join(new_route_list)
+        n9k_routes.append(' ' + new_route_string)
+
+    return n9k_routes
+
 
 #############################################
 ################### MAIN ####################
@@ -787,15 +832,17 @@ svi_not_to_be_migrated_N9508 = get_list_not_to_be_migrated(svi_on_N9508, svi_fro
 migr_dict_N9508 = get_migration_dictionary_N9508()
 cfg_intf_N9508 = get_normalized_if_OSWVCEVSW_cfg(if_not_to_be_migrated_N9508, migr_dict_N9508, qos_sp_def_N9508_dict)
 cfg_vlan_N9508 = get_normalized_vlan_OSWVCEVSW_cfg(vlan_not_to_be_migrated_N9508)
-cfg_svi_N9508 = get_normalized_svi_OSWVCEVSW_cfg(svi_not_to_be_migrated_N9508, svi_on_N9508)
+#cfg_svi_N9508 = get_normalized_svi_OSWVCEVSW_cfg(svi_not_to_be_migrated_N9508, svi_on_N9508)
+cfg_svi_N9508 = get_normalized_svi_OSWVCEVSW_cfg(svi_not_to_be_migrated_N9508)
 cfg_svi_and_ospf_N9508 = add_ospf_to_svi_cfg(cfg_svi_N9508, svi_on_N9508, svi_to_area_dict)
-routes_for_N9508 = get_routes_for_devices(routes, svi_on_N9508)
+routes_for_N6500 = get_routes_for_devices(routes, svi_on_N9508)
+routes_for_N9508 = transform_routes_for_nexus(routes_for_N6500)
 
 migr_dict_N3048 = get_migration_dictionary_N3048()
 cfg_intf_N3048 = get_normalized_if_OSWVCEVSW_cfg(if_not_to_be_migrated_N3048, migr_dict_N3048, qos_sp_def_N3048_dict)
 cfg_vlan_N3048 = get_normalized_vlan_OSWVCEVSW_cfg(vlan_not_to_be_migrated_N3048)
 
-cfg_N9508 = cfg_vlan_N9508 + cfg_intf_N9508 + cfg_svi_and_ospf_N9508 + routes_for_N9508
+cfg_N9508 = cfg_vlan_N9508 + cfg_intf_N9508 + cfg_svi_and_ospf_N9508 + routes_for_N9508 + routes_for_N6500
 parse_out_N9508 = c.CiscoConfParse(cfg_N9508)
 parse_out_N9508.save_as(OSWVCE_CFG_TXT)
 
