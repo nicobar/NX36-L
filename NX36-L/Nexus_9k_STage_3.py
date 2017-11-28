@@ -488,7 +488,7 @@ def get_cleaned_routes():  # return a list of cleaned (with egress interfaces) r
 def get_routes_for_devices(static_routes, real_svi_on_device):
     ''' return a list of routes whose egress if are referenced in static routes   '''
 
-    real_routes_on_device = ['\n' + 10 * '#' + " 6500's routes here below " + 1 * '#' + '\n']
+    real_routes_on_device = ['\n' + 10 * '#' + " 6500's routes here below " + 10 * '#' + '\n']
     for route in static_routes:
         svi = route.split(' ')
         if len(svi) >= 6:
