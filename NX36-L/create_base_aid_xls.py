@@ -66,6 +66,49 @@ def get_command_output(node_name, cmd):
     return file_name
 
 
+def get_remote_cmd(node_name, cmd):
+    ''' This function read devices names from file,
+     connects to them and write on file output of a file '''
+
+    cmd_telnet_bridge = 'telnet ' + BRIDGE_NAME
+
+    cmd_telnet_node = 'telnet ' + node_name
+    cmd_h = str.replace(cmd, ' ', '_')
+    #
+    file_name = node_name + '_' + cmd_h + '.txt'
+
+    lower_string_to_expect = node_name + '#'
+
+    string_to_expect = str.upper(lower_string_to_expect)
+
+    child = pexpect.spawn(cmd_telnet_bridge, encoding='utf-8')
+
+    child.expect('login: ')
+    child.sendline(MyUsername)
+    child.expect('Password: ')
+    child.sendline(MyBridgePwd)
+    child.expect('\$')
+
+    child.sendline(cmd_telnet_node)
+    child.expect('username: ')
+    child.sendline(MyUsername)
+    child.expect('password: ')
+    child.sendline(MyTacacsPwd)
+    child.expect(string_to_expect)
+    child.sendline('term len 0')
+    child.expect(string_to_expect)
+
+    child.sendline(cmd)
+
+    with open(BASE_DIR + file_name, 'w') as fout:
+        child.logfile_read = fout
+        child.expect(string_to_expect)
+
+    child.terminate()
+
+    return file_name
+
+
 def from_range_to_list(range_str):
     ''' tansform '1-3' in [1,2,3] '''
 
@@ -183,7 +226,7 @@ def manage_show_vlan_brief_twosheets(wb, path2file):
     first_index = text_list.index(search_string)
     second_index = text_list.index(search_string, first_index + 1)
 
-    ws1 = wb.create_sheet(title='show_vlan_brief_{}'.format(node_list[0]), index=0)
+    ws1 = wb.create_sheet(title='show_vlan_brief_OSW1', index=0)
 
     myrow = 1
     for line in text_list[:second_index - first_index + 1]:
@@ -198,7 +241,7 @@ def manage_show_vlan_brief_twosheets(wb, path2file):
 
                 myrow += 1
 
-    ws2 = wb.create_sheet(title='show_vlan_brief_{}'.format(node_list[1]), index=0)
+    ws2 = wb.create_sheet(title='show_vlan_brief_OSW2', index=0)
 
     myrow = 1
     for line in text_list[second_index - first_index:]:
@@ -228,15 +271,16 @@ def get_sheet_from_filename(path):
     return map_file_2_sheet
 
 
-def manage_nexus_vlan(wb, nexus_list):
+def manage_nexus_vlan(wb, nexus_filelist2sheet):
 
+    nexus_list = nexus_filelist2sheet.keys()
     vce_vlan_dict = dict()
     all_nexus_vlan = []
 
     for nexus_file in nexus_list:
         VCE_CFG_TXT_IN = BASE_DIR + nexus_file
         vce_vlan_dict[nexus_file] = get_vlan_from_cfg(VCE_CFG_TXT_IN)
-        ws = wb.create_sheet(title='VLAN_ON_{}'.format(nexus_file[:-4]), index=0)
+        ws = wb.create_sheet(title='VLAN_ON_{}'.format(nexus_filelist2sheet[nexus_file]), index=0)
         myrow = 1
         for elem in vce_vlan_dict[nexus_file]:
             if elem:
@@ -290,8 +334,77 @@ def manage_static_routes(wb, nexus_file_list):
         myrow += 1
 
 
-def create_xlsx(path, site):
+def manage_rb(wb, node_list):
 
+    mac_osw_map = dict()
+    vlan_rb_map = dict()
+    new_vlan_rb_map = dict()
+    ws = wb.create_sheet(title='Root-bridge per VLAN', index=0)
+
+    for node in node_list:
+        mac_osw_map[get_switch_mac_address(node)] = node
+        vlan_rb_map.update(get_rb_per_vlan(node))
+
+    for vlan in vlan_rb_map.keys():
+        for mac in mac_osw_map.keys():
+            if vlan_rb_map[vlan] == mac:
+                new_vlan_rb_map[vlan] = mac_osw_map[mac]
+
+    myrow = 1
+    for vlan in new_vlan_rb_map.keys():
+        ws.cell(row=myrow, column=1, value=vlan)
+        ws.cell(row=myrow, column=2, value=new_vlan_rb_map[vlan])
+        myrow += 1
+
+
+def get_switch_mac_address(osw):
+    ''' return a string containing mac address of osw '''
+
+    cmd = 'show spanning-tree bridge address'
+
+    file_name = get_remote_cmd(osw, cmd)
+    lst = from_file_to_cfg_as_list(file_name)
+    if lst is not None:
+        mac = lst[1].split()[1]
+    else:
+        mac = None
+    return mac
+
+
+def from_file_to_cfg_as_list(file_name):
+    ''' return a list containing text of file_name '''
+    show_cmd = []
+
+    for elem in open(BASE_DIR + file_name, 'r'):
+        show_cmd.append(elem.rstrip())
+    return show_cmd
+
+
+def get_rb_per_vlan(osw):
+    ''' return a map {vlan: mac} indicating RB for osw '''
+
+    cmd = 'show spanning-tree root brief'
+
+    file_name = get_remote_cmd(osw, cmd)
+    show_list = from_file_to_cfg_as_list(file_name)
+
+    mp = {}
+
+    for elem in show_list:
+        if len(elem) > 0:
+            if elem[:2] == 'VL':
+                lst_elem = elem.split()
+                vlan = lst_elem[0]
+                mac = lst_elem[2]
+                mp[vlan[4:].lstrip('0')] = mac
+            else:
+                continue
+        else:
+            continue
+    return mp
+
+
+def create_xlsx(path, site):
     OUTPUT_XLS = path + 'AID_to_{}_NMP.xlsx'.format(site)
     wb = Workbook()
     map_file_2_sheet = get_sheet_from_filename(path)
@@ -307,8 +420,9 @@ def create_xlsx(path, site):
         elif 'standby' in cmd_list or 'vrrp' in cmd_list or 'description' in cmd_list:
             manage_simple(ws, path + file)
 
-    manage_nexus_vlan(wb, nexus_file_list)
+    manage_nexus_vlan(wb, nexus_filelist2sheet)
     manage_static_routes(wb, nexus_file_list)
+    manage_rb(wb, node_list)
     wb.save(filename=OUTPUT_XLS)
 
 
@@ -324,36 +438,41 @@ BASE_DIR = BASE + SITE + 'AID/'
 
 BRIDGE_NAME = '10.192.10.8'
 MyUsername = 'zzasp70'
-MyBridgePwd = "SP9400ra"
+MyBridgePwd = "SPra0094"
 MyTacacsPwd = "0094SPra_"
 command_list = ['show interfaces description',
                 'show vlan brief',
                 'show standby brief',
                 'show vrrp brief',
                 'show interfaces {} trunk'.format(PO)]
+#'show spanning-tree bridge address',
+#'show spanning-tree root brief']
 
 node_list = ['BOOSW013',
              'BOOSW016']
 
-nexus_file_list = ['BOOSW013VCE.txt',
-                   'BOOSW016VCE.txt',
-                   'BOOSW013VSW.txt']
+nexus_filelist2sheet = {'BOOSW013VCE.txt': 'VCE1',
+                        'BOOSW016VCE.txt': 'VCE2',
+                        'BOOSW013VSW.txt': 'VSW'
+                        }
+
+nexus_file_list = nexus_filelist2sheet.keys()
 
 ############################################
 ################# MAIN #####################
 ############################################
 
 
-#my_time = time_string()
+my_time = time_string()
 
-# file_list = []
-# for cmd in command_list:
-#     for node in node_list:
-#         file_list.append(get_command_output(node, cmd))
-file_list = ['BO01_20112017_show_interfaces_description.txt',
-             'BO01_20112017_show_interfaces_po1_trunk.txt',
-             'BO01_20112017_show_standby_brief.txt',
-             'BO01_20112017_show_vlan_brief.txt',
-             'BO01_20112017_show_vrrp_brief.txt']
+file_list = []
+for cmd in command_list:
+    for node in node_list:
+        file_list.append(get_command_output(node, cmd))
+# file_list = ['BO01_20112017_show_interfaces_description.txt',
+#              'BO01_20112017_show_interfaces_po1_trunk.txt',
+#              'BO01_20112017_show_standby_brief.txt',
+#              'BO01_20112017_show_vlan_brief.txt',
+#              'BO01_20112017_show_vrrp_brief.txt']
 
 create_xlsx(BASE_DIR, SITE[:-1])
