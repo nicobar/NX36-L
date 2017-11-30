@@ -352,7 +352,7 @@ def manage_rb(wb, node_list):
 
     myrow = 1
     for vlan in new_vlan_rb_map.keys():
-        ws.cell(row=myrow, column=1, value=vlan)
+        ws.cell(row=myrow, column=1, value=int(vlan))
         ws.cell(row=myrow, column=2, value=new_vlan_rb_map[vlan])
         myrow += 1
 
