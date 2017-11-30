@@ -336,8 +336,8 @@ def manage_static_routes(wb, nexus_file_list):
 
 def manage_rb(wb, node_list):
 
-    mac_osw_map = dict()
-    vlan_rb_map = dict()
+    mac_osw_map = dict()  # {mac: name}
+    vlan_rb_map = dict()  # {vlan: mac}
     new_vlan_rb_map = dict()
     ws = wb.create_sheet(title='Root-bridge per VLAN', index=0)
 
@@ -346,9 +346,16 @@ def manage_rb(wb, node_list):
         vlan_rb_map.update(get_rb_per_vlan(node))
 
     for vlan in vlan_rb_map.keys():
-        for mac in mac_osw_map.keys():
-            if vlan_rb_map[vlan] == mac:
-                new_vlan_rb_map[vlan] = mac_osw_map[mac]
+        #         for mac in mac_osw_map.keys():
+        #             if vlan_rb_map[vlan] in mac_osw_map.keys():
+        #                 if
+        #                 new_vlan_rb_map[vlan] = mac_osw_map[mac]
+        #             else:
+        #                 new_vlan_rb_map[vlan] = vlan_rb_map[vlan]
+        if vlan_rb_map[vlan] in mac_osw_map.keys():
+            new_vlan_rb_map[vlan] = mac_osw_map[vlan_rb_map[vlan]]
+        else:
+            new_vlan_rb_map[vlan] = vlan_rb_map[vlan]
 
     myrow = 1
     for vlan in new_vlan_rb_map.keys():
