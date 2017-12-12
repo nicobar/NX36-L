@@ -16,7 +16,7 @@ SHEET = SWITCH
 VLAN_FROM_XLS = True  # IF TRUE THEN XLS IS TRUSTABLE AS TRUSTED VLAN' SOURCE
 
 BASE = '/mnt/hgfs/VM_shared/VF-2017/NMP/'
-SITE = 'BO01/'
+SITE = 'BO01-test/'
 BASE_DIR = BASE + SITE + SWITCH + '/Stage_3/'
 
 INPUT_XLS = BASE_DIR + SWITCH + '_OUT_DB_OPT.xlsx'
@@ -389,13 +389,9 @@ def clean_hsrp_to_svi(cfg):
     config_svi_to_add = []
     parse = c.CiscoConfParse(cfg)
 
-    svi_hsrp_obj_list = parse.find_objects(r'^interface Vlan')
-
-    svi_hsrp_list_h2 = [obj.ioscfg for obj in svi_hsrp_obj_list]
-    svi_hsrp_list_h1 = list(itertools.chain.from_iterable(svi_hsrp_list_h2))
-
-    # eliminates VRRP commands (will become HSRP secondary on VPE)
-    svi_hsrp_list = [svi for svi in svi_hsrp_list_h1 if svi.find('vrrp') < 0]
+    svi_hsrp_obj_list = parse.find_objects_wo_child(r'^interface Vlan', 'vrrp')
+    svi_hsrp_list_h = [obj.ioscfg for obj in svi_hsrp_obj_list]
+    svi_hsrp_list = list(itertools.chain.from_iterable(svi_hsrp_list_h))
 
     for line in svi_hsrp_list:
         line_lst = line.lstrip().split()
@@ -419,6 +415,43 @@ def clean_hsrp_to_svi(cfg):
             config_svi_to_add.append(line)
 
     return config_svi_to_add
+
+# def clean_hsrp_to_svi_orig(cfg):
+#     ''' translate HSRP from IOS to NS-OX '''
+#
+#     config_svi_to_add = []
+#     parse = c.CiscoConfParse(cfg)
+#
+#     svi_hsrp_obj_list = parse.find_objects(r'^interface Vlan')
+#
+#     svi_hsrp_list_h2 = [obj.ioscfg for obj in svi_hsrp_obj_list]
+#     svi_hsrp_list_h1 = list(itertools.chain.from_iterable(svi_hsrp_list_h2))
+#
+#     # eliminates VRRP commands (will become HSRP secondary on VPE)
+#     svi_hsrp_list = [svi for svi in svi_hsrp_list_h1 if svi.find('vrrp') < 0]
+#
+#     for line in svi_hsrp_list:
+#         line_lst = line.lstrip().split()
+#
+#         if line_lst[0] == 'standby':
+#             if len(line_lst) == 4:
+#                 if line_lst[2] == 'ip':
+#                     config_svi_to_add.append(' hsrp ' + line_lst[1])
+#                     config_svi_to_add.append('  ip ' + line_lst[3])
+#                 elif line_lst[2] == 'priority':
+#                     config_svi_to_add.append('  priority ' + line_lst[3])
+#             elif len(line_lst) == 3:
+#                 if line_lst[2] == 'preempt':
+#                     config_svi_to_add.append('  preempt')
+#                 else:
+#                     config_svi_to_add.append('  ERROR TO BE CHECKED ')
+#         elif line_lst[0] == 'interface':
+#             config_svi_to_add.append('!')
+#             config_svi_to_add.append(line)
+#         else:
+#             config_svi_to_add.append(line)
+#
+#     return config_svi_to_add
 
 
 def add_shutdown(cfg):
@@ -546,12 +579,9 @@ def get_svi_to_area(d_net_in_area):
                 for area in d_net_in_area:
                     for net in d_net_in_area[area]:
                         if ip_svi in net:
-                            if area == '0':
-                                area = '0.0.0.0'
-                            if int(ipaddress.IPv4Address(area)) <= 255:
-                                dict_svi_to_area[svi_obj.text] = '0.0.0.' + area
-                            else:
-                                dict_svi_to_area[svi_obj.text] = area
+                            if type(area) is str and len(area) is 1:
+                                area = int(area)
+                            dict_svi_to_area[svi_obj.text] = str(ipaddress.IPv4Address(area))
 
     return dict_svi_to_area
 
