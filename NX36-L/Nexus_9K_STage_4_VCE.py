@@ -360,7 +360,9 @@ def get_po_vce_vsw1_301_and_1000():
     vlan_final_s = ','.join(vlan_final)
     vlan_final = []
 
-    po_301_tot = ['interface port-channel301',
+    po_301_tot = ['! Following PO301 has to be configured on VCE and on VSW',
+                  '!',
+                  'interface port-channel301',
                   ' service-policy type qos input VF-INGRESS',
                   ' switchport trunk allowed vlan add ' + vlan_final_s
                   ]

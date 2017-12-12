@@ -546,7 +546,9 @@ def get_svi_to_area(d_net_in_area):
                 for area in d_net_in_area:
                     for net in d_net_in_area[area]:
                         if ip_svi in net:
-                            if int(area) <= 255:
+                            if area == '0':
+                                area = '0.0.0.0'
+                            if int(ipaddress.IPv4Address(area)) <= 255:
                                 dict_svi_to_area[svi_obj.text] = '0.0.0.' + area
                             else:
                                 dict_svi_to_area[svi_obj.text] = area
