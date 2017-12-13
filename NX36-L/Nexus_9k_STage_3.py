@@ -9,7 +9,7 @@ import itertools
 ################# VARIABLES/CONSTANT #################
 ######################################################
 
-SWITCH = 'BOOSW013'
+SWITCH = 'BOOSW016'
 
 SHEET = SWITCH
 
@@ -24,7 +24,7 @@ OSW_CFG_TXT = BASE_DIR + SWITCH + '.txt'
 OSWVCE_CFG_TXT = BASE_DIR + SWITCH + 'VCE' + '.txt'
 OSWVSW_CFG_TXT = BASE_DIR + SWITCH + 'VSW' + '.txt'
 
-OTHER_SWITCH = 'BOOSW016'
+OTHER_SWITCH = 'BOOSW013'
 
 
 OTHER_BASE_DIR = BASE + SITE + OTHER_SWITCH + '/Stage_3/'
@@ -32,7 +32,7 @@ OTHER_INPUT_XLS = OTHER_BASE_DIR + OTHER_SWITCH + '_OUT_DB_OPT.xlsx'
 OTHER_SHEET = OTHER_SWITCH
 
 PO_OSW_OSW = r'^interface Port-channel1$'
-PO_OSW_VPE = r'^interface Port-channel113$'
+PO_OSW_VPE = r'^interface Port-channel116$'
 
 qos_sp_def_N9508_dict = {
     'U': ' service-policy type qos input UNTRUST',
@@ -579,7 +579,8 @@ def get_svi_to_area(d_net_in_area):
                 for area in d_net_in_area:
                     for net in d_net_in_area[area]:
                         if ip_svi in net:
-                            if type(area) is str and len(area) is 1:
+                            if type(area) is str and '.' not in area:
+                                #if type(area) is str and len(area) <= 3:
                                 area = int(area)
                             dict_svi_to_area[svi_obj.text] = str(ipaddress.IPv4Address(area))
 
