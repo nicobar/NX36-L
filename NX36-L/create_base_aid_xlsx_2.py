@@ -48,7 +48,7 @@ def manage_interface_description(wb, osw_list):
 
 def manage_standby_brief(wb, osw_list):
     cmd = 'show standby brief'
-    sheet = 'show_standby brief'
+    sheet = 'show_standby_brief'
     site = SITE[:-1]
     filename = []
     ws = wb.create_sheet(title=sheet, index=0)
@@ -272,7 +272,7 @@ def manage_rb(wb, node_list):
     mac_osw_map = dict()  # {mac: name}
     vlan_rb_map = dict()  # {vlan: mac}
     new_vlan_rb_map = dict()
-    ws = wb.create_sheet(title='Root-bridge per VLAN', index=0)
+    ws = wb.create_sheet(title='Root-bridge_per_VLAN', index=0)
 
     for node in node_list:
         mac_osw_map[get_switch_mac_address(node)] = node
