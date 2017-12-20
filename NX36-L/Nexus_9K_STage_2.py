@@ -32,18 +32,23 @@ MAX_COPPER_PX = 48
 MIN_COPPER_PX = 24
 MAX_COPPER_TX = 48
 MIN_COPPER_TX = 0
+MAX_COPPER_N3K = 48
+MIN_COPPER_N3K = 0
 
 FREE_TE = 1
 FREE_GE_OPT = 1
 FREE_COPPER_PX = 5
 FREE_COPPER_TX = 9
+FREE_COPPER_N3K = 6
 
 # BOARD_#K
 #
 # slot1   : [10/100/1000 Mb/s copper]
 #
 
-BOARD_3K = ['interface Ethernet1/' + str(x) for x in range(48, 0, -1)]
+#BOARD_3K = ['interface Ethernet1/' + str(x) for x in range(48, 0, -1)]
+
+BOARD_3K = ['interface Ethernet1/' + str(x) for x in range(MAX_COPPER_N3K - FREE_COPPER_N3K, MIN_COPPER_N3K, -1)]
 
 
 # BOARD_9K

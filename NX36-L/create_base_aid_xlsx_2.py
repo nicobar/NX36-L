@@ -2,9 +2,8 @@
 ################# IMPORTS ####################
 ##############################################
 
-import os
+
 import pexpect
-import time
 import ciscoconfparse as c
 from openpyxl.workbook import Workbook
 
@@ -17,7 +16,6 @@ def manage_interface_description(wb, osw_list):
 
     cmd = 'show interfaces description'
     sheet = 'show_interfaces_description'
-    site = SITE[:-1]
     filename = []
     ws = wb.create_sheet(title=sheet, index=0)
 
@@ -49,7 +47,6 @@ def manage_interface_description(wb, osw_list):
 def manage_standby_brief(wb, osw_list):
     cmd = 'show standby brief'
     sheet = 'show_standby_brief'
-    site = SITE[:-1]
     filename = []
     ws = wb.create_sheet(title=sheet, index=0)
 
@@ -81,7 +78,6 @@ def manage_standby_brief(wb, osw_list):
 def manage_vrrp_brief(wb, osw_list):
     cmd = 'show vrrp brief'
     sheet = 'show_vrrp_brief'
-    site = SITE[:-1]
     filename = []
     ws = wb.create_sheet(title=sheet, index=0)
 
@@ -113,7 +109,6 @@ def manage_vrrp_brief(wb, osw_list):
 def manage_interface_trunk(wb, osw_list):
     cmd = 'show interface {} trunk'.format(OSW2OSW_PO)
     sheet = 'show_interface_CE2CE_trunk'
-    site = SITE[:-1]
     filename = []
     ws = wb.create_sheet(title=sheet, index=0)
     text = ''
@@ -372,8 +367,8 @@ def create_sheet_for_vpe_tag(ws, vpe_node, vpe_file, trunk_map):
     parse_string = r''
     tag_list = []
     for trunk in trunk_map[vpe_node]:
-        parse_string += '^interface {}|'.format(trunk)
-        parse_string = parse_string[:-1]
+        parse_string += '^interface {}\.|'.format(trunk)
+    parse_string = parse_string[:-1]
 
     parse = c.CiscoConfParse(vpe_file)
     obj_list = parse.find_objects(parse_string)
@@ -536,17 +531,17 @@ def get_indexes(text_list):
 #############################################
 
 
-OSW_LIST = ['BOOSW014',
-            'BOOSW015']
-VPE_LIST = ['BOVPE013',
-            'BOVPE014']
-OSW2OSW_PO = 'Port-channel100'
-VCE2VPE_PO = 'Port-channel412'
+OSW_LIST = ['ANOSW021',
+            'ANOSW022']
+VPE_LIST = ['ANVPE023',
+            'ANVPE024']
+OSW2OSW_PO = 'Port-channel10'
+VCE2VPE_PO = 'Port-channel421'
 # trunk_map = {vpe_node: [trunk1, trunk2, ]} where trunks are VPE to OSW trunks by VPE side
-TRUNK_MAP = {VPE_LIST[0]: ['Bundle-Ether114', ],
-             VPE_LIST[1]: ['Bundle-Ether115', ]}
+TRUNK_MAP = {VPE_LIST[0]: ['Bundle-Ether121', 'GigabitEthernet0/7/1/1', 'GigabitEthernet0/2/1/2', 'GigabitEthernet0/7/1/2'],
+             VPE_LIST[1]: ['Bundle-Ether122', 'GigabitEthernet0/7/1/1', 'GigabitEthernet0/2/1/2', 'GigabitEthernet0/7/1/2']}
 BASE = '/mnt/hgfs/VM_shared/VF-2017/NMP/'
-SITE = 'BO01_Bis/'
+SITE = 'AN02/'
 BASE_DIR = BASE + SITE + 'AID/'
 
 OUTPUT_XLS = BASE_DIR + 'AID_to_{}_NMP.xlsx'.format(SITE[:-1])
