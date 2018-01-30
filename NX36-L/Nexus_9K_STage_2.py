@@ -13,7 +13,7 @@ TYPE = 'Type2'
 #TYPE = 'Type4'
 
 
-BASE = '/mnt/hgfs/VM_shared/VF-2017/XLS4VLAN/'
+BASE = '/mnt/hgfs/VM_shared/VF-2017/NMP/'
 SITE = 'GE01/'
 BASE_DIR = BASE + SITE + SWITCH + '/Stage_2/'
 
