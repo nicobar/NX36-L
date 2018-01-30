@@ -34,14 +34,14 @@ def get_string_from_range_to_list(range_str):
     help_list = range_str.split('-')
     start = int(help_list[0])
     stop = int(help_list[1])
-    l = range(start, stop + 1)
-    stringed_list = [str(x) for x in l]
+    my_l = range(start, stop + 1)
+    stringed_list = [str(x) for x in my_l]
     s = ','.join(stringed_list)
     return s
 
 
 def get_allowed_vlan_list(if_cfg, SEL):
-    ''' Get interface configuration block as a list 
+    ''' Get interface configuration block as a list
         and returns a list (SEL = 'LIST') or string (SEL = "STRING")  
         of trunk allowed VLANS '''
 
@@ -83,7 +83,7 @@ def get_allowed_vlan_list(if_cfg, SEL):
 
 
 def get_access_vlan(if_cfg):
-    ''' Get interface configuration block as a list 
+    ''' Get interface configuration block as a list
         and returns the access VLAN as integer '''
 
     for line in if_cfg:
@@ -107,7 +107,7 @@ def description_are_equals(desc_from_xls, if_cfg):
 
 
 def get_channel_group(if_cfg):
-    ''' Get interface configuration block as a list 
+    ''' Get interface configuration block as a list
         and returns the channel-group id as integer '''
 
     for elem in if_cfg:
@@ -349,7 +349,7 @@ def readin_xls_writeout_xls():
                         row_w[14].value = "Description CHANGED!!!"
                         row_w[14].fill = pinkFill
                 elif not(intf_obj.has_child_with("description")):
-                    if row_r[5].value == None:
+                    if row_r[5].value is None:
                         row_w[14].value = "Description unchanged"
                         row_w[14].fill = greenFill
                     else:
