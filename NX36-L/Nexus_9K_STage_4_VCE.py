@@ -55,9 +55,9 @@ def get_vlan_string(mylist, my_vlan_tbm):
 
     vlan_string_h2 = vlan_string_h1.split(',')
     vlan_string_h2.sort(key=natural_keys)
-    vlan_string_h1 = [x for x in vlan_string_h2 if x in my_vlan_tbm]
+    vlan_string_h3 = [x for x in vlan_string_h2 if x in my_vlan_tbm]
 
-    vlan_string = ','.join(vlan_string_h1)
+    vlan_string = ','.join(vlan_string_h3)
 
     return vlan_string
 
@@ -389,11 +389,12 @@ def write_cfg(conf_list):
 new_po = 'interface Port-channel411'
 
 # be2po_map OR BETTER vpe_to_osw_if_mapping reports all trunk interfaces (main BE/PO and voice/sig trunks)
-
+# This MUST BE CONFIGURED on STAGE_4 both VCE and VPE steps
+#
 be2po_map = {'interface Bundle-Ether113': 'interface Port-channel113',               # This is BE <--> PO mapping
-             #'interface GigabitEthernet0/7/1/1': 'interface GigabitEthernet4/21',  # This is VOICE/SIG TRUNK mapping
-             #'interface GigabitEthernet0/2/1/2': 'interface GigabitEthernet4/22',  # This is VOICE/SIG TRUNK mapping
-             #'interface GigabitEthernet0/7/1/2': 'interface GigabitEthernet4/23',  # This is VOICE/SIG TRUNK mapping
+             'interface GigabitEthernet0/7/1/1': 'interface GigabitEthernet4/21',  # This is VOICE/SIG TRUNK mapping
+             'interface GigabitEthernet0/2/1/2': 'interface GigabitEthernet4/22',  # This is VOICE/SIG TRUNK mapping
+             'interface GigabitEthernet0/7/1/2': 'interface GigabitEthernet4/23',  # This is VOICE/SIG TRUNK mapping
              }
 
 PO_OSW_MATE = 'Port-channel1'
