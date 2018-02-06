@@ -117,7 +117,7 @@ def get_po_vce():
         ' switchport mode trunk',
         ' mtu 9216',
         ' no ip address',
-        ' port-channel min-links 2',
+        ' port-channel min-links 1',
         ' no cdp enable',
     ]
     return vce_po_cfg_h
