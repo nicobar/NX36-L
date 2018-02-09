@@ -263,7 +263,7 @@ def manage_dot1q(wb, vce2vpe_po, nexus_file_dict, vpe_list, trunk_map):
 
 def manage_rb(wb, node_list):
 
-    print('Staring  manage_rb')
+    print('Starting  manage_rb')
     mac_osw_map = dict()  # {mac: name}
     vlan_rb_map = dict()  # {vlan: mac}
     new_vlan_rb_map = dict()
@@ -290,7 +290,7 @@ def manage_rb(wb, node_list):
 
 def manage_static_routes(wb, vce_file_list):
 
-    print('Staring  manage_static_routes')
+    print('Starting  manage_static_routes')
     text_list = []
     ws = wb.create_sheet(title='VCE_Static_Routes', index=0)
     for file in vce_file_list:
