@@ -270,12 +270,12 @@ def get_migration_dictionary_N9508():
             for r in range(2, ws_r.max_row + 1) if (ws_r.cell(row=r, column=NEXUS_AP_COL).value != 'N3048' and ws_r.cell(row=r, column=NEXUS_AP_COL).value != 'Infra')}
 
 
-def get_normalized_if_OSWVCEVSW_cfg(if_ntbm, mig_dict, qos_sp_def_dict):
+def get_normalized_if_OSWVCEVSW_cfg(device, if_ntbm, mig_dict, qos_sp_def_dict):
     ''' return cfg as list of migrated and cleaned - fz clean_if_cfg - interfaces  '''
 
     intf_gr = get_if_xls_guardroot()
 
-    intf_qos_dict = get_if_to_qos_xls_dict()
+    intf_qos_dict = get_if_to_qos_xls_dict(device)
     parse = c.CiscoConfParse(OSW_CFG_TXT)
 
     intf_obj_list = parse.find_objects(r'^interface .*Ethernet')
@@ -489,8 +489,7 @@ def get_cleaned_routes():  # return a list of cleaned (with egress interfaces) r
                     for elem in l3_obj.ioscfg:
                         if elem[:11] == ' ip address':
                             help_list = elem.split()
-                            ip_network = ipaddress.IPv4Network(
-                                help_list[2] + '/' + help_list[3], strict=False)
+                            ip_network = ipaddress.IPv4Network(help_list[2] + '/' + help_list[3], strict=False)
                             if ip_nh in ip_network:
                                 nh_ifs = l3_obj.text[10:]
                                 route_l.insert(route_l.index(nh), nh_ifs)
@@ -642,7 +641,7 @@ def get_if_xls_guardroot():
     return if_gr
 
 
-def get_if_to_qos_xls_dict():
+def get_if_to_qos_xls_dict(device):
     ''' Return {intf : QoS} dict '''
 
     wb_r = load_workbook(INPUT_XLS)
@@ -650,10 +649,13 @@ def get_if_to_qos_xls_dict():
     DST_VCE_IF_COL = 2
     QOS_COL = 5
     NEXUS_AP = 6
-
-    qos_gr = {str(ws_r.cell(row=r, column=DST_VCE_IF_COL).value): str(ws_r.cell(row=r, column=QOS_COL).value)
-              for r in range(2, ws_r.max_row + 1) if str(ws_r.cell(row=r, column=NEXUS_AP).value) != 'Infra'}
-
+    if device == 'N9508':
+        qos_gr = {str(ws_r.cell(row=r, column=DST_VCE_IF_COL).value): str(ws_r.cell(row=r, column=QOS_COL).value)
+                  for r in range(2, ws_r.max_row + 1) if (str(ws_r.cell(row=r, column=NEXUS_AP).value) != 'Infra' and
+                                                          str(ws_r.cell(row=r, column=NEXUS_AP).value) != 'N3048')}
+    elif device == 'N3048':
+        qos_gr = {str(ws_r.cell(row=r, column=DST_VCE_IF_COL).value): str(ws_r.cell(row=r, column=QOS_COL).value)
+                  for r in range(2, ws_r.max_row + 1) if str(ws_r.cell(row=r, column=NEXUS_AP).value) == 'N3048'}
     return qos_gr
 
 
@@ -861,9 +863,9 @@ svi_on_N9508.sort(key=natural_keys)
 print("svi_on_N9508 = ", svi_on_N9508)
 
 svi_not_to_be_migrated_N9508 = get_list_not_to_be_migrated(svi_on_N9508, svi_from_cfg)
-
+device = 'N9508'
 migr_dict_N9508 = get_migration_dictionary_N9508()
-cfg_intf_N9508 = get_normalized_if_OSWVCEVSW_cfg(if_not_to_be_migrated_N9508, migr_dict_N9508, qos_sp_def_N9508_dict)
+cfg_intf_N9508 = get_normalized_if_OSWVCEVSW_cfg(device, if_not_to_be_migrated_N9508, migr_dict_N9508, qos_sp_def_N9508_dict)
 cfg_vlan_N9508 = get_normalized_vlan_OSWVCEVSW_cfg(vlan_not_to_be_migrated_N9508)
 #cfg_svi_N9508 = get_normalized_svi_OSWVCEVSW_cfg(svi_not_to_be_migrated_N9508, svi_on_N9508)
 cfg_svi_N9508 = get_normalized_svi_OSWVCEVSW_cfg(svi_not_to_be_migrated_N9508)
@@ -871,8 +873,9 @@ cfg_svi_and_ospf_N9508 = add_ospf_to_svi_cfg(cfg_svi_N9508, svi_on_N9508, svi_to
 routes_for_N6500 = get_routes_for_devices(routes, svi_on_N9508)
 routes_for_N9508 = transform_routes_for_nexus(routes_for_N6500)
 
+device = 'N3048'
 migr_dict_N3048 = get_migration_dictionary_N3048()
-cfg_intf_N3048 = get_normalized_if_OSWVCEVSW_cfg(if_not_to_be_migrated_N3048, migr_dict_N3048, qos_sp_def_N3048_dict)
+cfg_intf_N3048 = get_normalized_if_OSWVCEVSW_cfg(device, if_not_to_be_migrated_N3048, migr_dict_N3048, qos_sp_def_N3048_dict)
 cfg_vlan_N3048 = get_normalized_vlan_OSWVCEVSW_cfg(vlan_not_to_be_migrated_N3048)
 
 cfg_N9508 = cfg_vlan_N9508 + cfg_intf_N9508 + cfg_svi_and_ospf_N9508 + routes_for_N9508 + routes_for_N6500
