@@ -9,12 +9,16 @@ import re
 ################# VARIABLES #################
 #############################################
 
-SWITCH = 'GEOSW011'
+SWITCH = 'PAOSW011'
 #INFRA_CH_GRP_LIST = [1,133]
 SHEET = SWITCH
-BASE = '/mnt/hgfs/VM_shared/VF-2017/NMP/'
-SITE = 'BO01/'
-BASE_DIR = BASE + SITE + SWITCH + '/Stage_1/'
+BASE = "../../../"
+SITE = "PA01/"
+BASE_DIR = BASE + SITE + SWITCH + "/Stage_1/"
+
+INPUT_XLS = BASE_DIR + SWITCH + '_DB_MIGRATION.xlsx'
+OUTPUT_XLS = BASE_DIR + SWITCH + '_OUT_DB.xlsx'
+OSW_CFG_TXT = BASE_DIR + SWITCH + '.txt'
 
 
 INPUT_XLS = BASE_DIR + SWITCH + '_DB_MIGRATION.xlsx'
@@ -145,16 +149,16 @@ def create_color_legendas(my_wb):
 
     ws['A1'] = 'Legend'
     ws['A2'] = 'To be Deleted??'
-    ws.cell('A2').fill = redFill
+    ws.cell(1,2).fill = redFill
     ws['A3'] = 'To be Checked'
-    ws.cell('A3').fill = orangeFill
+    ws.cell(1,3).fill = orangeFill
     ws['A4'] = 'To be Merged??'
-    ws.cell('A4').fill = yellowFill   
+    ws.cell(1,4).fill = yellowFill
     ws['A5'] = 'Interface description'
     ws['A6'] = 'To be Verified'
-    ws.cell('A6').fill = pinkFill
+    ws.cell(1,6).fill = pinkFill
     ws['A7'] = 'Not To be Verified??'
-    ws.cell('A7').fill = greenFill
+    ws.cell(1,7).fill = greenFill
 
     my_wb.save(filename = OUTPUT_XLS)
 
@@ -194,9 +198,8 @@ def colour_output_xlsx():
     '''Get OUTPUT_XLS and  colors lines to help people on check interfaces '''
     
     wb = load_workbook(OUTPUT_XLS)
-    ws = wb.get_sheet_by_name(SHEET)
-     
-    
+    ws = wb[SHEET]
+
     MAX_COL = ws.max_column-1
     MAX_COLUMN_COLOR = MAX_COL
 
@@ -247,7 +250,7 @@ def readin_xls_writeout_xls():
     wb_w = Workbook()
     
     
-    ws_r = wb_r.get_sheet_by_name(SHEET)
+    ws_r = wb_r[SHEET]
     ws_w = wb_w.create_sheet(index = 0, title = SHEET)
     
     MAX_COL = 15

@@ -5,21 +5,24 @@ def enum(**enums):
     return type('Enum', (), enums)
 
 
-SWITCH = 'GEOSW012'
-
+SWITCH = 'PAOSW011'
 
 TYPE = 'Type2'
 #TYPE = 'Type3'
 #TYPE = 'Type4'
 
 
-BASE = '/mnt/hgfs/VM_shared/VF-2017/XLS4VLAN/'
-SITE = 'GE01/'
-BASE_DIR = BASE + SITE + SWITCH + '/Stage_2/'
+BASE = "../../../"
+SITE = "PA01/"
+BASE_DIR = BASE + SITE + SWITCH + "/Stage_1/"
 
-INPUT_XLS = BASE_DIR + SWITCH + '_OUT_DB_OPT.xlsx'
+
+INPUT_XLS = BASE_DIR + SWITCH + '_OUT_DB.xlsx'
 
 SHEET = SWITCH
+
+
+
 
 
 MAX_TE = 8
@@ -125,7 +128,7 @@ elif TYPE == 'Type4':
 
 
 wb = load_workbook(INPUT_XLS)
-ws = wb.get_sheet_by_name(SHEET)
+ws = wb[SHEET]
 
 
 for row in ws.rows:
