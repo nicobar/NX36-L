@@ -3,27 +3,23 @@ from openpyxl.workbook import Workbook
 from openpyxl.styles import PatternFill
 import ciscoconfparse as c
 import re
-
+import json
 
 #############################################
 ################# VARIABLES #################
 #############################################
 
-SWITCH = 'PAOSW011'
-#INFRA_CH_GRP_LIST = [1,133]
-SHEET = SWITCH
-BASE = "../../../"
-SITE = "PA01/"
-BASE_DIR = BASE + SITE + SWITCH + "/Stage_1/"
+site_config = {}
+with open("site_config.json") as f:
+    site_config = json.load(f)
 
-INPUT_XLS = BASE_DIR + SWITCH + '_DB_MIGRATION.xlsx'
-OUTPUT_XLS = BASE_DIR + SWITCH + '_OUT_DB.xlsx'
-OSW_CFG_TXT = BASE_DIR + SWITCH + '.txt'
+base_dir = site_config['base'] + site_config['site'] + site_config['switch'] + "/Stage_1/"
 
+INPUT_XLS = base_dir + site_config['switch'] + '_DB_MIGRATION.xlsx'
+OUTPUT_XLS =   base_dir+ site_config['switch'] + '_OUT_DB.xlsx'
+OSW_CFG_TXT = base_dir  + site_config['switch'] + '.txt'
 
-INPUT_XLS = BASE_DIR + SWITCH + '_DB_MIGRATION.xlsx'
-OUTPUT_XLS = BASE_DIR + SWITCH + '_OUT_DB.xlsx'
-OSW_CFG_TXT = BASE_DIR + SWITCH + '.txt'
+SHEET = site_config['sheet']
 
 
 # +-----0-A------+-----1-B------+------2-C------+---3-D--+---4-E-+-----5-F----+-------6-G---+-------7-H---------+-------8-I-----+-------9-J-----+-------10-K-----+----11-L----+-----12-M-------+---13-N----------+---14-O----------+---15-P----------+   

@@ -1,28 +1,25 @@
 from openpyxl import load_workbook
-
+import json
 
 def enum(**enums):
     return type('Enum', (), enums)
 
-
-SWITCH = 'PAOSW011'
 
 TYPE = 'Type2'
 #TYPE = 'Type3'
 #TYPE = 'Type4'
 
 
-BASE = "../../../"
-SITE = "PA01/"
-BASE_DIR = BASE + SITE + SWITCH + "/Stage_1/"
+site_config = {}
+with open("site_config.json") as f:
+    site_config = json.load(f)
 
+base_dir = site_config['base'] + site_config['site'] + site_config['switch'] + "/Stage_1/"
 
-INPUT_XLS = BASE_DIR + SWITCH + '_OUT_DB.xlsx'
+INPUT_XLS = base_dir + site_config['switch'] + '_DB_MIGRATION.xlsx'
 
-SHEET = SWITCH
-
-
-
+SHEET = site_config['sheet']
+SWITCH = site_config['switch']
 
 
 MAX_TE = 8
