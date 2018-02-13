@@ -1,0 +1,7 @@
+{
+    "switch": "PAOSW011",
+    "infra_ch_grp_list": " [1,133]",
+    "sheet": "PAOSW011",
+    "base": "../../../",
+    "site": "PA01/"
+}
