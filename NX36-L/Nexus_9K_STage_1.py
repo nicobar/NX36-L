@@ -21,7 +21,6 @@ OSW_CFG_TXT = base_dir  + site_config['switch'] + '.txt'
 
 SHEET = site_config['sheet']
 
-
 # +-----0-A------+-----1-B------+------2-C------+---3-D--+---4-E-+-----5-F----+-------6-G---+-------7-H---------+-------8-I-----+-------9-J-----+-------10-K-----+----11-L----+-----12-M-------+---13-N----------+---14-O----------+---15-P----------+   
 # +--SRC_OSW_IF--+--DST_VCE_IF--+--Access-Type--+--VLAN--+--QoS--+--Nexus_AP--+--Member/PO--+-----Descr---------+----Duplex-----+-----Speed-----+---Media Type---+---Action---+---Root-Guard---+---System-type---+---Check_Descr---+----Temp---------+ 
 #                                   |                                    
@@ -145,16 +144,16 @@ def create_color_legendas(my_wb):
 
     ws['A1'] = 'Legend'
     ws['A2'] = 'To be Deleted??'
-    ws.cell(1,2).fill = redFill
+    ws['A2'].fill = redFill
     ws['A3'] = 'To be Checked'
-    ws.cell(1,3).fill = orangeFill
+    ws['A3'].fill = orangeFill
     ws['A4'] = 'To be Merged??'
-    ws.cell(1,4).fill = yellowFill
+    ws['A4'].fill = yellowFill
     ws['A5'] = 'Interface description'
     ws['A6'] = 'To be Verified'
-    ws.cell(1,6).fill = pinkFill
+    ws['A6'].fill = pinkFill
     ws['A7'] = 'Not To be Verified??'
-    ws.cell(1,7).fill = greenFill
+    ws['A7'].fill = greenFill
 
     my_wb.save(filename = OUTPUT_XLS)
 
