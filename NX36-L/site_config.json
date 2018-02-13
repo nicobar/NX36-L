@@ -3,5 +3,6 @@
     "infra_ch_grp_list": " [1,133]",
     "sheet": "PAOSW011",
     "base": "../../../",
-    "site": "PA01/"
+    "site": "PA01/",
+    "type": "Type2"
 }

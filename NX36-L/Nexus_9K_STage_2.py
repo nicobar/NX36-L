@@ -1,26 +1,22 @@
 from openpyxl import load_workbook
 import json
+import pprint
 
 def enum(**enums):
     return type('Enum', (), enums)
-
-
-TYPE = 'Type2'
-#TYPE = 'Type3'
-#TYPE = 'Type4'
-
 
 site_config = {}
 with open("site_config.json") as f:
     site_config = json.load(f)
 
-base_dir = site_config['base'] + site_config['site'] + site_config['switch'] + "/Stage_1/"
+TYPE = site_config['type']
 
-INPUT_XLS = base_dir + site_config['switch'] + '_DB_MIGRATION.xlsx'
+base_dir = site_config['base'] + site_config['site'] + site_config['switch'] + "/Stage_2/"
+
+INPUT_XLS = base_dir + site_config['switch'] + '_OUT_DB_OPT.xlsx'
 
 SHEET = site_config['sheet']
 SWITCH = site_config['switch']
-
 
 MAX_TE = 8
 MIN_TE_SLOT1 = 1
@@ -49,7 +45,6 @@ FREE_COPPER_N3K = 6
 #BOARD_3K = ['interface Ethernet1/' + str(x) for x in range(48, 0, -1)]
 
 BOARD_3K = ['interface Ethernet1/' + str(x) for x in range(MAX_COPPER_N3K - FREE_COPPER_N3K, MIN_COPPER_N3K, -1)]
-
 
 # BOARD_9K
 #
@@ -85,11 +80,10 @@ BOARD_3K = ['interface Ethernet1/' + str(x) for x in range(MAX_COPPER_N3K - FREE
 #
 #            }
 
-
 BOARD_9K = {
     'Type2':
     {'slot1': {'TE': ['interface Ethernet1/' + str(x) for x in range(MAX_TE - FREE_TE, MIN_TE_SLOT1, -1)], 'GE-OPT': ['interface Ethernet1/' + str(x) for x in range(MAX_GE_OPT - FREE_GE_OPT, MIN_GE_OPT, -1)], 'GE-COP': ['interface Ethernet1/' + str(x) for x in range(MAX_COPPER_PX - FREE_COPPER_PX, MIN_COPPER_PX, -1)]},
-     'slot2': {'TE': ['interface Ethernet2/' + str(x) for x in range(MAX_TE - FREE_TE, MIN_TE_SLOT2, -1)], 'GE-OPT': ['interface Ethernet2/' + str(x) for x in range(MAX_GE_OPT_STLN - FREE_GE_OPT, MIN_GE_OPT, -1)], 'GE-COP': ['interface Ethernet2/' + str(x) for x in range(MAX_COPPER_PX - FREE_COPPER_PX, MIN_COPPER_PX, -1)]},
+     'slot2': {'TE': ['interface Ethernet2/' + str(x) for x in range(MAX_TE - FREE_TE, MIN_TE_SLOT2, -1)], 'GE-OPT': ['interface Ethernet2/' + str(x) for x in range(MAX_GE_OPT_STLN - FREE_GE_OPT, MIN_GE_OPT, -1)], 'GE-COP': ['interface Ethernet2/' + str(x) for x in range(MAX_COPPER_PX - FREE_COPPER_PX, MIN_COPPER_PX, -1) if x not in [39,38,37]]},
 
      'slot7': ['interface Ethernet7/' + str(x) for x in range(MAX_COPPER_TX - FREE_COPPER_TX, MIN_COPPER_TX, -1)],
      'slot8': ['interface Ethernet8/' + str(x) for x in range(MAX_COPPER_TX - FREE_COPPER_TX, MIN_COPPER_TX, -1)]},
@@ -112,7 +106,6 @@ BOARD_9K = {
      'slot8': ['interface Ethernet8/' + str(x) for x in range(MAX_COPPER_TX - FREE_COPPER_TX, MIN_COPPER_TX, -1)]},
 
 }
-
 
 if TYPE == 'Type2':
     SLOT = enum(ONE='slot1', TWO='slot2', SEVEN='slot7', EIGHT='slot8',)
