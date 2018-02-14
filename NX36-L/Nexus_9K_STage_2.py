@@ -67,7 +67,12 @@ FREE_GE_OPT = 1
 FREE_COPPER_PX = 5
 FREE_COPPER_TX = 9
 FREE_COPPER_N3K = 11  # last 5 for management, previous 6 for Gianesini
-FREE_TEMP = 0
+#
+# At least one FREE_TEMP_* has to be valorized
+#
+FREE_TEMP_OPT = 0
+FREE_TEMP_COPPER = 0
+FREE_TEMP_TE = 0
 
 BOARD_3K = ['interface Ethernet1/' +
             str(x) for x in range(MAX_COPPER_N3K - FREE_COPPER_N3K, MIN_COPPER_N3K, -1)]
@@ -76,14 +81,14 @@ BOARD_3K = ['interface Ethernet1/' +
 BOARD_9K = {
     'Type2':
     {'slot1': {'TE': ['interface Ethernet1/' + str(x) for x in range(MAX_TE - FREE_TE, MIN_TE_SLOT1, -1)], 'GE-OPT': ['interface Ethernet1/' + str(x) for x in range(MAX_GE_OPT - FREE_GE_OPT, MIN_GE_OPT, -1)], 'GE-COP': ['interface Ethernet1/' + str(x) for x in range(MAX_COPPER_PX - FREE_COPPER_PX, MIN_COPPER_PX, -1)]},
-     'slot2': {'TE': ['interface Ethernet2/' + str(x) for x in range(MAX_TE - FREE_TE, MIN_TE_SLOT2, -1)], 'GE-OPT': ['interface Ethernet2/' + str(x) for x in range(MAX_GE_OPT_STLN - FREE_GE_OPT, MIN_GE_OPT, -1)], 'GE-COP': ['interface Ethernet2/' + str(x) for x in range(MAX_COPPER_PX - FREE_COPPER_PX, MIN_COPPER_PX, -1)]},
+     'slot2': {'TE': ['interface Ethernet2/' + str(x) for x in range(MAX_TE - FREE_TE - FREE_TEMP_TE, MIN_TE_SLOT2, -1)], 'GE-OPT': ['interface Ethernet2/' + str(x) for x in range(MAX_GE_OPT_STLN - FREE_GE_OPT - FREE_TEMP_OPT, MIN_GE_OPT, -1)], 'GE-COP': ['interface Ethernet2/' + str(x) for x in range(MAX_COPPER_PX - FREE_COPPER_PX - FREE_TEMP_COPPER, MIN_COPPER_PX, -1)]},
 
      'slot7': ['interface Ethernet7/' + str(x) for x in range(MAX_COPPER_TX - FREE_COPPER_TX, MIN_COPPER_TX, -1)],
      'slot8': ['interface Ethernet8/' + str(x) for x in range(MAX_COPPER_TX - FREE_COPPER_TX, MIN_COPPER_TX, -1)]},
 
     'Type3':
     {'slot1': {'TE': ['interface Ethernet1/' + str(x) for x in range(MAX_TE - FREE_TE, MIN_TE_SLOT1, -1)], 'GE-OPT': ['interface Ethernet1/' + str(x) for x in range(MAX_GE_OPT - FREE_GE_OPT, MIN_GE_OPT, -1)], 'GE-COP': ['interface Ethernet1/' + str(x) for x in range(MAX_COPPER_PX - FREE_COPPER_PX, MIN_COPPER_PX, -1)]},
-     'slot2': {'TE': ['interface Ethernet2/' + str(x) for x in range(MAX_TE - FREE_TE, MIN_TE_SLOT2, -1)], 'GE-OPT': ['interface Ethernet2/' + str(x) for x in range(MAX_GE_OPT_STLN - FREE_GE_OPT, MIN_GE_OPT, -1)], 'GE-COP': ['interface Ethernet2/' + str(x) for x in range(MAX_COPPER_PX - FREE_COPPER_PX, MIN_COPPER_PX, -1)]},
+     'slot2': {'TE': ['interface Ethernet2/' + str(x) for x in range(MAX_TE - FREE_TE - FREE_TEMP_TE, MIN_TE_SLOT2, -1)], 'GE-OPT': ['interface Ethernet2/' + str(x) for x in range(MAX_GE_OPT_STLN - FREE_GE_OPT - FREE_TEMP_OPT, MIN_GE_OPT, -1)], 'GE-COP': ['interface Ethernet2/' + str(x) for x in range(MAX_COPPER_PX - FREE_COPPER_PX - FREE_TEMP_COPPER, MIN_COPPER_PX, -1)]},
 
      'slot6': ['interface Ethernet6/' + str(x) for x in range(MAX_COPPER_TX - FREE_COPPER_TX, MIN_COPPER_TX, -1)],
      'slot7': ['interface Ethernet7/' + str(x) for x in range(MAX_COPPER_TX - FREE_COPPER_TX, MIN_COPPER_TX, -1)],
@@ -91,7 +96,7 @@ BOARD_9K = {
 
     'Type4':
     {'slot1': {'TE': ['interface Ethernet1/' + str(x) for x in range(MAX_TE - FREE_TE, MIN_TE_SLOT1, -1)], 'GE-OPT': ['interface Ethernet1/' + str(x) for x in range(MAX_GE_OPT - FREE_GE_OPT, MIN_GE_OPT, -1)], 'GE-COP': ['interface Ethernet1/' + str(x) for x in range(MAX_COPPER_PX - FREE_COPPER_PX, MIN_COPPER_PX, -1)]},
-     'slot2': {'TE': ['interface Ethernet2/' + str(x) for x in range(MAX_TE - FREE_TE, MIN_TE_SLOT2, -1)], 'GE-OPT': ['interface Ethernet2/' + str(x) for x in range(MAX_GE_OPT_STLN - FREE_GE_OPT, MIN_GE_OPT, -1)], 'GE-COP': ['interface Ethernet2/' + str(x) for x in range(MAX_COPPER_PX - FREE_COPPER_PX, MIN_COPPER_PX, -1)]},
+     'slot2': {'TE': ['interface Ethernet2/' + str(x) for x in range(MAX_TE - FREE_TE - FREE_TEMP_TE, MIN_TE_SLOT2, -1)], 'GE-OPT': ['interface Ethernet2/' + str(x) for x in range(MAX_GE_OPT_STLN - FREE_GE_OPT - FREE_TEMP_OPT, MIN_GE_OPT, -1)], 'GE-COP': ['interface Ethernet2/' + str(x) for x in range(MAX_COPPER_PX - FREE_COPPER_PX - FREE_TEMP_COPPER, MIN_COPPER_PX, -1)]},
 
      'slot5': ['interface Ethernet5/' + str(x) for x in range(MAX_COPPER_TX - FREE_COPPER_TX, MIN_COPPER_TX, -1)],
      'slot6': ['interface Ethernet6/' + str(x) for x in range(MAX_COPPER_TX - FREE_COPPER_TX, MIN_COPPER_TX, -1)],
