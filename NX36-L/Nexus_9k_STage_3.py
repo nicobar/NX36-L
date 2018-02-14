@@ -3,36 +3,38 @@ import ciscoconfparse as c
 import re
 import ipaddress
 import itertools
+import json
 
+#############################################
+################# VARIABLES #################
+#############################################
 
-######################################################
-################# VARIABLES/CONSTANT #################
-######################################################
+site_config = {}
+with open("site_config.json") as f:
+    site_config = json.load(f)
 
-SWITCH = 'BOOSW016'
+base_dir = site_config['base'] + site_config['site'] + site_config['switch'] + "/Stage_3/"
 
-SHEET = SWITCH
+INPUT_XLS = base_dir + site_config['switch'] + '_OUT_DB_OPT.xlsx'
+OSW_CFG_TXT = base_dir  + site_config['switch'] + '.txt'
+
+SHEET = site_config['sheet']
+SWITCH = site_config['switch']
 
 VLAN_FROM_XLS = True  # IF TRUE THEN XLS IS TRUSTABLE AS TRUSTED VLAN' SOURCE
 
-BASE = '/mnt/hgfs/VM_shared/VF-2017/NMP/'
-SITE = 'BO01-test/'
-BASE_DIR = BASE + SITE + SWITCH + '/Stage_3/'
+OSWVCE_CFG_TXT = base_dir + SWITCH + 'VCE' + '.txt'
+OSWVSW_CFG_TXT = base_dir + SWITCH + 'VSW' + '.txt'
 
-INPUT_XLS = BASE_DIR + SWITCH + '_OUT_DB_OPT.xlsx'
-OSW_CFG_TXT = BASE_DIR + SWITCH + '.txt'
-OSWVCE_CFG_TXT = BASE_DIR + SWITCH + 'VCE' + '.txt'
-OSWVSW_CFG_TXT = BASE_DIR + SWITCH + 'VSW' + '.txt'
-
-OTHER_SWITCH = 'BOOSW013'
+OTHER_SWITCH = site_config['other_switch']
 
 
-OTHER_BASE_DIR = BASE + SITE + OTHER_SWITCH + '/Stage_3/'
-OTHER_INPUT_XLS = OTHER_BASE_DIR + OTHER_SWITCH + '_OUT_DB_OPT.xlsx'
+OTHER_BASE_DIR = base_dir + site_config['site'] + OTHER_SWITCH + '/Stage_3/'
+OTHER_INPUT_XLS = base_dir + OTHER_SWITCH + '_OUT_DB_OPT.xlsx'
 OTHER_SHEET = OTHER_SWITCH
 
 PO_OSW_OSW = r'^interface Port-channel1$'
-PO_OSW_VPE = r'^interface Port-channel116$'
+PO_OSW_VPE = r'^interface Port-channel111$'
 
 qos_sp_def_N9508_dict = {
     'U': ' service-policy type qos input UNTRUST',
@@ -135,7 +137,7 @@ def get_if_from_xls():
     ''' Return column col as list '''
 
     wb_r = load_workbook(INPUT_XLS)
-    ws_r = wb_r.get_sheet_by_name(SHEET)
+    ws_r = wb_r[SHEET]
     SRC_IF_COL = 1
     if_N3048 = get_col_N3048(ws_r, SRC_IF_COL)
     if_N9508 = get_col_N9508(ws_r, SRC_IF_COL)
@@ -168,7 +170,7 @@ def get_vlan_from_xls():
     ''' from xls get list of all L2 vlan  '''
 
     wb_r = load_workbook(INPUT_XLS)
-    ws_r = wb_r.get_sheet_by_name(SHEET)
+    ws_r = wb_r[SHEET]
     VLAN_COL = 4
 
     lst_N9508 = get_col_for_vlan_N9508(ws_r, VLAN_COL)
@@ -248,7 +250,7 @@ def get_migration_dictionary_N3048():
     ''' return {SRC_IF:DEST_IF} for N3048  '''
 
     wb_r = load_workbook(INPUT_XLS)
-    ws_r = wb_r.get_sheet_by_name(SHEET)
+    ws_r = wb_r[SHEET]
 
     NEXUS_AP_COL = 6
     SRC_IF_COL = 1
@@ -261,7 +263,7 @@ def get_migration_dictionary_N9508():
     ''' return {SRC_IF:DEST_IF} for N9508  '''
 
     wb_r = load_workbook(INPUT_XLS)
-    ws_r = wb_r.get_sheet_by_name(SHEET)
+    ws_r = wb_r[SHEET]
 
     NEXUS_AP_COL = 6
     SRC_IF_COL = 1
@@ -631,7 +633,7 @@ def get_if_xls_guardroot():
     ''' Return intf list if root_guard == 'Yes' '''
 
     wb_r = load_workbook(INPUT_XLS)
-    ws_r = wb_r.get_sheet_by_name(SHEET)
+    ws_r = wb_r[SHEET]
     DST_VCE_IF_COL = 2
     ROOT_GUARD_COL = 13
 
@@ -645,7 +647,7 @@ def get_if_to_qos_xls_dict(device):
     ''' Return {intf : QoS} dict '''
 
     wb_r = load_workbook(INPUT_XLS)
-    ws_r = wb_r.get_sheet_by_name(SHEET)
+    ws_r = wb_r[SHEET]
     DST_VCE_IF_COL = 2
     QOS_COL = 5
     NEXUS_AP = 6
