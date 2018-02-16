@@ -33,8 +33,8 @@ OTHER_BASE_DIR = base_dir + site_config['site'] + OTHER_SWITCH + '/Stage_3/'
 OTHER_INPUT_XLS = base_dir + OTHER_SWITCH + '_OUT_DB_OPT.xlsx'
 OTHER_SHEET = OTHER_SWITCH
 
-PO_OSW_OSW = r'^interface Port-channel1$'
-PO_OSW_VPE = r'^interface Port-channel111$'
+PO_OSW_OSW = r'^interface Port-channel' + site_config['portch_OSW_OSW'] + "$"
+PO_OSW_VPE = r'^interface Port-channel' + site_config['portch_OSW_VPE'] + "$"
 
 qos_sp_def_N9508_dict = {
     'U': ' service-policy type qos input UNTRUST',
@@ -291,8 +291,7 @@ def get_normalized_if_OSWVCEVSW_cfg(device, if_ntbm, mig_dict, qos_sp_def_dict):
                 intf_obj.append_to_family(
                     'spanning-tree guard root', auto_indent=True)
             if intf_obj.text in intf_qos_dict:
-                intf_obj.append_to_family(
-                    qos_sp_def_dict[intf_qos_dict[intf_obj.text]], auto_indent=True)
+                intf_obj.append_to_family(qos_sp_def_dict[intf_qos_dict[intf_obj.text]], auto_indent=True)
 
     parse.commit()
 
