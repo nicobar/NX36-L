@@ -122,13 +122,14 @@ def get_po_vce():
     ]
     return vce_po_cfg_h
 
-
+# qui si collega agli apparati
 def get_switch_mac_address():
     ''' return a string containing mac address '''
 
     cmd = 'show spanning-tree bridge address'
+    #file_name = get_remote_cmd(OSW_SWITCH, cmd)
+    file_name = BASE + SITE + "DATA_SRC/CMD/" + "PAOSW011_show_spanning-tree_bridge_address.txt"
 
-    file_name = get_remote_cmd(OSW_SWITCH, cmd)
     lst = from_file_to_cfg_as_list(file_name)
     if lst is not None:
         mac = lst[1].split()[1]
@@ -141,8 +142,9 @@ def get_rb_per_vlan():
     ''' return a map {vlan: mac} '''
 
     cmd = 'show spanning-tree root brief'
+    #file_name = get_remote_cmd(OSW_SWITCH, cmd)
+    file_name = BASE + SITE + "DATA_SRC/CMD/" + "PAOSW011_show_spanning-tree_root_brief.txt"
 
-    file_name = get_remote_cmd(OSW_SWITCH, cmd)
     show_list = from_file_to_cfg_as_list(file_name)
 
     mp = {}
@@ -386,29 +388,28 @@ def write_cfg(conf_list):
 #################### CONSTATNT ##################
 
 
-new_po = 'interface Port-channel411'
+new_po = 'interface Port-channel411' #4 e' fisso, 1 e' il sito e l ultimo numero e' la coppia
 
 # be2po_map OR BETTER vpe_to_osw_if_mapping reports all trunk interfaces (main BE/PO and voice/sig trunks)
 # This MUST BE CONFIGURED on STAGE_4 both VCE and VPE steps
 #
-be2po_map = {'interface Bundle-Ether113': 'interface Port-channel113',               # This is BE <--> PO mapping
-             'interface GigabitEthernet0/7/1/1': 'interface GigabitEthernet4/21',  # This is VOICE/SIG TRUNK mapping
-             'interface GigabitEthernet0/2/1/2': 'interface GigabitEthernet4/22',  # This is VOICE/SIG TRUNK mapping
-             'interface GigabitEthernet0/7/1/2': 'interface GigabitEthernet4/23',  # This is VOICE/SIG TRUNK mapping
+
+be2po_map = {'interface Bundle-Ether111': 'interface Port-channel111',               # This is BE <--> PO mapping
+             'interface GigabitEthernet0/2/1/1': 'interface GigabitEthernet4/6',  # This is VOICE/SIG TRUNK mapping
+             'interface GigabitEthernet0/7/1/1': 'interface GigabitEthernet4/7',  # This is VOICE/SIG TRUNK mapping
+             'interface GigabitEthernet0/2/1/2': 'interface GigabitEthernet4/8',  # This is VOICE/SIG TRUNK mapping
              }
 
 PO_OSW_MATE = 'Port-channel1'
 
-OSW_SWITCH = 'BOOSW013'
-VSW_SWITCH = 'BOVSW01101'
-VPE_ROUTER = 'BOVPE013'
-VCE_SWITCH = 'BOVCE011'
-BRIDGE_NAME = '10.192.10.8'
+OSW_SWITCH = 'PAOSW011'
+VSW_SWITCH = 'PAVSW01101'
+VPE_ROUTER = 'PAVPE013'
+VCE_SWITCH = 'PAVCE011'
 
-BASE = '/mnt/hgfs/VM_shared/VF-2017/NMP/'
-SITE = 'BO01/'
+BASE = '../../../'
+SITE = 'PA01/'
 BASE_DIR = BASE + SITE + OSW_SWITCH + '/Stage_4/VCE/'
-
 
 #INPUT_XLS = BASE_DIR + OSW_SWITCH + '_OUT_DB_OPT.xlsx'
 
@@ -417,10 +418,6 @@ OSW_CFG_TXT = BASE_DIR + OSW_SWITCH + '.txt'
 VSW_CFG_TXT_IN = BASE_DIR + OSW_SWITCH + 'VSW.txt'
 VCE_CFG_TXT_OUT = BASE_DIR + OSW_SWITCH + 'VCE_addendum.txt'
 VCE_CFG_TXT_IN = BASE_DIR + OSW_SWITCH + 'VCE.txt'
-
-MyUsername = "zzasp70"
-MyBridgePwd = "SPra0094"
-MyTacacsPwd = "0094SPra_"
 
 ############## MAIN ###########
 print('Script Starts')
