@@ -6,7 +6,7 @@ def enum(**enums):
 
 
 site_config = {}
-with open("site_config.json") as f:
+with open("site_config_MIOSW058.json") as f:
     site_config = json.load(f)
 
 TYPE = site_config['type']

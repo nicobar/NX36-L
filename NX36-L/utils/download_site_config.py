@@ -1,21 +1,46 @@
 import requests
 import json
 from bs4 import BeautifulSoup
+import os
 
-site_config = {}
-with open("pass.json") as f:
-    passw = json.load(f)
+def open_file(path):
+    with open(path) as f:
+       return json.load(f)
 
-site = "MIOSW058"
-net_pr = "http://netprofile-emea.cisco.com/netprofile/viewInventoryReport.do?action=viewConfig&grpId=0&cpyKey=70293&custId=&deviceId=1974861&deviceName="+ site +"&configName=running&configId=235279724"
-username = 'gcarlucc'
-password = passw["password"]
-data = requests.get(net_pr, auth=(username, password))
+class Get_Command():
+    def __init__(self, credentials, site_config):
+        self.site = site_config['site']
+        self.switch = site_config['switch']
+        self.username = credentials['username']
+        self.password = credentials["password"]
+        self.site = site_config['site']
+        self.base_dir_utils = "../"
+        self.command_url = site_config["url_run1"] + site_config['switch'] + site_config["url_run2"]
 
-soup = BeautifulSoup(data.text, "html.parser")
+    def download(self):
+        data = requests.get(self.command_url, auth=(self.username, self.password))
+        soup = BeautifulSoup(data.text, "html.parser")
+        text =  soup.get_text(separator='\n')
+        return text.split("Building configuration...", 1)[1]
 
-config = (soup.find("div", {"class": "module"}))
-config = ''.join(map(str, config.contents))
+    def save_result(self, soup, dest_path, file_name):
+        filepath = dest_path + file_name + '.txt'
+        if not os.path.exists(dest_path):
+            os.makedirs(dest_path)
+        with open(filepath,'w') as f:
+            f.write(soup)
+            f.close()
 
-#for link in soup.find_all('a'):
-#    print(link)
+if __name__ == "__main__":
+    credentials = open_file("pass.json")
+    couple = ["MIOSW057", "MIOSW058"]
+    for switch in couple:
+        site_config = open_file("../site_configs/site_config_" + switch + ".json")
+
+        save_run_config = Get_Command(credentials, site_config)
+        soup = save_run_config.download()
+
+        dest_path = [ "../" + site_config["base"] + site_config["site"] + site_config["switch"] + "/Stage_1/"]
+        dest_path.append("../" + site_config["base"] + site_config["site"] + "/DATA_SRC/CFG/")
+        for path in dest_path:
+            save_run_config.save_result(soup, path, site_config["switch"])
