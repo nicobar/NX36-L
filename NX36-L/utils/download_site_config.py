@@ -37,10 +37,10 @@ if __name__ == "__main__":
     for switch in couple:
         site_config = open_file("../site_configs/site_config_" + switch + ".json")
 
-        save_run_config = Get_Command(credentials, site_config)
-        soup = save_run_config.download()
+        save_command = Get_Command(credentials, site_config)
+        soup = save_command.download()
 
         dest_path = [ "../" + site_config["base"] + site_config["site"] + site_config["switch"] + "/Stage_1/"]
         dest_path.append("../" + site_config["base"] + site_config["site"] + "/DATA_SRC/CFG/")
         for path in dest_path:
-            save_run_config.save_result(soup, path, site_config["switch"])
+            save_command.save_result(soup, path, site_config["switch"])
