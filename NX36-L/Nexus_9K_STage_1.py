@@ -10,7 +10,7 @@ import json
 #############################################
 
 site_config = {}
-with open("../site_configs/site_config_MIOSW057.json") as f:
+with open("site_configs/site_config_MIOSW058.json") as f:
     site_config = json.load(f)
 
 base_dir = site_config['base'] + site_config['site'] + site_config['switch'] + "/Stage_1/"

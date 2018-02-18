@@ -10,10 +10,18 @@ def get_excel_sheet(filename):
     wb = openpyxl.load_workbook(filename)
     first_sheet = wb.sheetnames[0]
     return wb["Summary_19JAN17"]
-def create_new_excel(file_name, sheet_name):
+
+def create_new_excel(sheet_name):
     wb = openpyxl.Workbook()
     wb.create_sheet(sheet_name)
     return wb[sheet_name], wb
+
+def save_wb(wb, dest_path, file_name):
+    import os
+    filepath = dest_path + file_name
+    if not os.path.exists(dest_path):
+        os.makedirs(dest_path)
+    wb.save(filepath)
 
 class Create_Excel():
     def __init__(self, excel_files, site_config):
@@ -56,9 +64,10 @@ if __name__ == "__main__":
     original = get_excel_sheet("../../../../Migrazione/Nexus_9k_new_v0.6.xlsx")
     for switch in couple:
         site_config = open_file("../site_configs/site_config_" + switch + ".json")
-        new_excel_file_path = "../" + site_config["base"] + site_config["site"] + site_config["switch"] + "/Stage_1/" + site_config[
-            "switch"] + "_DB_MIGRATION.xlsx"
-        new_excel, wb = create_new_excel(new_excel_file_path, site_config["switch"])
+        new_excel, wb = create_new_excel(site_config["switch"])
         new_site_db = Create_Excel([original, new_excel], site_config)
         new_site_db.extract_info()
-        wb.save(new_excel_file_path)
+        new_excel_file_path1 = "../" + site_config["base"] + site_config["site"] + site_config["switch"] + "/Stage_1/"
+        new_excel_file_path2 = "../" + site_config["base"] + site_config["site"] + "/DATA_SRC/XLS/INPUT_STAGE_1/"
+        save_wb(wb, new_excel_file_path1, site_config["switch"] + "_DB_MIGRATION.xlsx")
+        save_wb(wb, new_excel_file_path2, site_config["switch"] + "_DB_MIGRATION.xlsx")
