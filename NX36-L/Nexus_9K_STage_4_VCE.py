@@ -126,9 +126,7 @@ def get_po_vce():
 def get_switch_mac_address():
     ''' return a string containing mac address '''
 
-    cmd = 'show spanning-tree bridge address'
-
-    file_name = get_remote_cmd(OSW_SWITCH, cmd)
+    file_name = CMD_PATH + OSW_SWITCH + '_show_spanning-tree_bridge_address.txt'
     lst = from_file_to_cfg_as_list(file_name)
     if lst is not None:
         mac = lst[1].split()[1]
@@ -140,9 +138,7 @@ def get_switch_mac_address():
 def get_rb_per_vlan():
     ''' return a map {vlan: mac} '''
 
-    cmd = 'show spanning-tree root brief'
-
-    file_name = get_remote_cmd(OSW_SWITCH, cmd)
+    file_name = CMD_PATH + OSW_SWITCH + '_show_spanning-tree_root_brief.txt'
     show_list = from_file_to_cfg_as_list(file_name)
 
     mp = {}
@@ -167,57 +163,6 @@ def time_string():
 
     tempo = time.gmtime()
     return str(tempo[2]) + str(tempo[1]) + str(tempo[0])
-
-
-def get_remote_cmd(device, command):
-    ''' Return a file_name containing show command of device dev '''
-    my_time = time_string()
-    cmd_telnet_node = 'telnet ' + device
-    cmd_telnet_bridge = 'telnet ' + BRIDGE_NAME
-    nname_time = OSW_SWITCH + '-' + my_time
-    filename_out = BASE_DIR + nname_time + '_' + str.replace(command, ' ', '_') + '.txt'
-    fout = open(filename_out, 'w')
-    lower_string_to_expect = OSW_SWITCH + '#'
-#    show_cmd = []
-
-    string_to_expect = str.upper(lower_string_to_expect)
-    try:
-
-        child = pexpect.spawnu(cmd_telnet_bridge)
-
-        child.expect('login: ')
-        child.sendline(MyUsername)
-        child.expect('Password: ')
-        child.sendline(MyBridgePwd)
-
-        child.expect('\$')
-
-        child.sendline(cmd_telnet_node)
-        child.expect('username: ')
-        child.sendline(MyUsername)
-        child.expect('password: ')
-        child.sendline(MyTacacsPwd)
-
-        child.expect(string_to_expect)
-        child.sendline('term len 0')
-        child.expect(string_to_expect)
-
-        child.sendline(command)
-
-        child.logfile_read = fout
-
-        child.expect(string_to_expect)
-        child.terminate()
-        fout.close()
-
-#        for elem in open(filename_out ,'r'):
-#            show_cmd.append(elem.rstrip())
-#        return show_cmd
-        return filename_out
-
-    except pexpect.exceptions.TIMEOUT:
-        print('ERROR: Connect to VPN before launching this script')
-        return None
 
 
 def from_file_to_cfg_as_list(file_name):
@@ -391,26 +336,27 @@ new_po = 'interface Port-channel411'
 # be2po_map OR BETTER vpe_to_osw_if_mapping reports all trunk interfaces (main BE/PO and voice/sig trunks)
 # This MUST BE CONFIGURED on STAGE_4 both VCE and VPE steps
 #
-be2po_map = {'interface Bundle-Ether113': 'interface Port-channel113',               # This is BE <--> PO mapping
-             'interface GigabitEthernet0/7/1/1': 'interface GigabitEthernet4/21',  # This is VOICE/SIG TRUNK mapping
-             'interface GigabitEthernet0/2/1/2': 'interface GigabitEthernet4/22',  # This is VOICE/SIG TRUNK mapping
-             'interface GigabitEthernet0/7/1/2': 'interface GigabitEthernet4/23',  # This is VOICE/SIG TRUNK mapping
+be2po_map = {'interface Bundle-Ether111': 'interface Port-channel111',               # This is BE <--> PO mapping
+             'interface GigabitEthernet0/2/1/1': 'interface GigabitEthernet4/6',  # This is VOICE/SIG TRUNK mapping
+             'interface GigabitEthernet0/7/1/1': 'interface GigabitEthernet4/7',  # This is VOICE/SIG TRUNK mapping
+             'interface GigabitEthernet0/2/1/2': 'interface GigabitEthernet4/8',  # This is VOICE/SIG TRUNK mapping
              }
 
 PO_OSW_MATE = 'Port-channel1'
 
-OSW_SWITCH = 'BOOSW013'
-VSW_SWITCH = 'BOVSW01101'
-VPE_ROUTER = 'BOVPE013'
-VCE_SWITCH = 'BOVCE011'
-BRIDGE_NAME = '10.192.10.8'
+OSW_SWITCH = 'PAOSW011'
+VSW_SWITCH = 'PAVSW01101'
+VPE_ROUTER = 'PAVPE013'
+VCE_SWITCH = 'PAVCE011'
+
+SITE = 'PA01/'
 
 BASE = '/mnt/hgfs/VM_shared/VF-2017/NMP/'
-SITE = 'BO01/'
+
+
+CMD_PATH = BASE + SITE + 'DATA_SRC/CMD/'
 BASE_DIR = BASE + SITE + OSW_SWITCH + '/Stage_4/VCE/'
 
-
-#INPUT_XLS = BASE_DIR + OSW_SWITCH + '_OUT_DB_OPT.xlsx'
 
 VPE_CFG_TXT = BASE_DIR + VPE_ROUTER + '.txt'
 OSW_CFG_TXT = BASE_DIR + OSW_SWITCH + '.txt'
@@ -418,9 +364,6 @@ VSW_CFG_TXT_IN = BASE_DIR + OSW_SWITCH + 'VSW.txt'
 VCE_CFG_TXT_OUT = BASE_DIR + OSW_SWITCH + 'VCE_addendum.txt'
 VCE_CFG_TXT_IN = BASE_DIR + OSW_SWITCH + 'VCE.txt'
 
-MyUsername = "zzasp70"
-MyBridgePwd = "SPra0094"
-MyTacacsPwd = "0094SPra_"
 
 ############## MAIN ###########
 print('Script Starts')

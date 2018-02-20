@@ -9,11 +9,11 @@ import re
 ################# VARIABLES #################
 #############################################
 
-SWITCH = 'GEOSW011'
+SWITCH = 'MIOSW057'
 #INFRA_CH_GRP_LIST = [1,133]
 SHEET = SWITCH
 BASE = '/mnt/hgfs/VM_shared/VF-2017/NMP/'
-SITE = 'BO01/'
+SITE = 'MI05/'
 BASE_DIR = BASE + SITE + SWITCH + '/Stage_1/'
 
 
@@ -27,6 +27,28 @@ OSW_CFG_TXT = BASE_DIR + SWITCH + '.txt'
 #                                   |
 #                                   |
 #                                   +-- Access, trunk, infra,
+
+def atoi(text):
+    ''' from string to int'''
+
+    return int(text) if text.isdigit() else text
+
+
+def natural_keys(text):
+    '''
+    alist.sort(key=natural_keys) sorts in human order
+    http://nedbatchelder.com/blog/200712/human_sorting.html
+    (See Toothy's implementation in the comments)
+    '''
+
+    return [atoi(c) for c in re.split('(\d+)', text)]
+
+
+def get_col(ws, col):
+    ''' Take a worksheet, return column "col" as lists '''
+
+    return [str(ws.cell(row=r, column=col).value) for r in range(2, ws.max_row + 1)]
+
 
 def get_string_from_range_to_list(range_str):
     ''' Takes '1-4' and Returns "1,2,3,4" '''
@@ -365,7 +387,49 @@ def readin_xls_writeout_xls():
     print("End F1")
 
 
+def further_interfaces():
+    parse = c.CiscoConfParse(OSW_CFG_TXT)
+
+    intf_obj_list = parse.find_objects(r'^interface .*Ethernet|^interface Port-channel.*')
+    if_list_cfg = [intf.text for intf in intf_obj_list]
+
+    wb = load_workbook(OUTPUT_XLS)
+
+    ws = wb[SHEET]
+    MAX_ROW = ws.max_row
+    START_ROW = MAX_ROW + 1
+
+    if_list_xls = get_col(ws, 1)
+
+    len_if_list_xls = len(if_list_xls)
+    len_if_list_cfg = len(if_list_cfg)
+
+    if_set_xls = set(if_list_xls)
+    if_set_cfg = set(if_list_cfg)
+
+    if (len_if_list_cfg - len_if_list_xls) > 0:
+
+        cfg_less_xls_list = list(if_set_cfg - if_set_xls)
+        cfg_less_xls_list.sort(key=natural_keys)
+
+        ws.cell(row=START_ROW, column=1).value = "Le seguenti interfaccie sono utilizzate nella cfg ma non compaiono nell' xlsx"
+        for elem, line in zip(cfg_less_xls_list, range(START_ROW + 1, START_ROW + 1 + len(cfg_less_xls_list))):
+            ws.cell(row=line, column=1).value = elem
+    elif (len_if_list_cfg - len_if_list_xls) == 0:
+        ws.cell(row=START_ROW, column=1).value = "Non Vi sono interfaccie aggiuntive"
+    elif (len_if_list_cfg - len_if_list_xls) < 0:
+
+        xls_less_cfg_list = list(if_set_xls - if_set_cfg)
+        xls_less_cfg_list.sort(key=natural_keys)
+        ws.cell(row=START_ROW, column=1).value = "Le seguenti interfaccie sono presenti nell XLSX ma non nella cfg--> VERIFICARE"
+        for elem, line in zip(xls_less_cfg_list, range(START_ROW + 1, START_ROW + 1 + len(xls_less_cfg_list))):
+            ws.cell(row=line, column=1).value = elem
+
+    wb.save(filename=OUTPUT_XLS)
+
+
 readin_xls_writeout_xls()
 colour_output_xlsx()
+further_interfaces()
 create_legendas()
 print('End script')

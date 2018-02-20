@@ -767,7 +767,7 @@ def transform_routes_for_nexus(routes):
 #############################################
 ################### MAIN ####################
 #############################################
-
+acl = ['!', 'ip access-list MGW_OM', ' 10 permit ip X.Y.Z.K/27  ! VLAN190 PAMGW02_[O&M_LAN]', ' 1000 deny ip any any', '!']
 ############## ROUTES ###############
 
 
@@ -878,7 +878,7 @@ migr_dict_N3048 = get_migration_dictionary_N3048()
 cfg_intf_N3048 = get_normalized_if_OSWVCEVSW_cfg(device, if_not_to_be_migrated_N3048, migr_dict_N3048, qos_sp_def_N3048_dict)
 cfg_vlan_N3048 = get_normalized_vlan_OSWVCEVSW_cfg(vlan_not_to_be_migrated_N3048)
 
-cfg_N9508 = cfg_vlan_N9508 + cfg_intf_N9508 + cfg_svi_and_ospf_N9508 + routes_for_N9508 + routes_for_N6500
+cfg_N9508 = acl + cfg_vlan_N9508 + cfg_intf_N9508 + cfg_svi_and_ospf_N9508 + routes_for_N9508 + routes_for_N6500
 parse_out_N9508 = c.CiscoConfParse(cfg_N9508)
 parse_out_N9508.save_as(OSWVCE_CFG_TXT)
 
