@@ -137,7 +137,7 @@ def get_if_from_xls():
     ''' Return column col as list '''
 
     wb_r = load_workbook(INPUT_XLS)
-    ws_r = wb_r[SHEET]
+    ws_r = wb_r.get_sheet_by_name(SHEET)
     SRC_IF_COL = 1
     if_N3048 = get_col_N3048(ws_r, SRC_IF_COL)
     if_N9508 = get_col_N9508(ws_r, SRC_IF_COL)
@@ -170,7 +170,7 @@ def get_vlan_from_xls():
     ''' from xls get list of all L2 vlan  '''
 
     wb_r = load_workbook(INPUT_XLS)
-    ws_r = wb_r[SHEET]
+    ws_r = wb_r.get_sheet_by_name(SHEET)
     VLAN_COL = 4
 
     lst_N9508 = get_col_for_vlan_N9508(ws_r, VLAN_COL)
@@ -250,7 +250,7 @@ def get_migration_dictionary_N3048():
     ''' return {SRC_IF:DEST_IF} for N3048  '''
 
     wb_r = load_workbook(INPUT_XLS)
-    ws_r = wb_r[SHEET]
+    ws_r = wb_r.get_sheet_by_name(SHEET)
 
     NEXUS_AP_COL = 6
     SRC_IF_COL = 1
@@ -263,7 +263,7 @@ def get_migration_dictionary_N9508():
     ''' return {SRC_IF:DEST_IF} for N9508  '''
 
     wb_r = load_workbook(INPUT_XLS)
-    ws_r = wb_r[SHEET]
+    ws_r = wb_r.get_sheet_by_name(SHEET)
 
     NEXUS_AP_COL = 6
     SRC_IF_COL = 1
@@ -291,7 +291,8 @@ def get_normalized_if_OSWVCEVSW_cfg(device, if_ntbm, mig_dict, qos_sp_def_dict):
                 intf_obj.append_to_family(
                     'spanning-tree guard root', auto_indent=True)
             if intf_obj.text in intf_qos_dict:
-                intf_obj.append_to_family(qos_sp_def_dict[intf_qos_dict[intf_obj.text]], auto_indent=True)
+                intf_obj.append_to_family(
+                    qos_sp_def_dict[intf_qos_dict[intf_obj.text]], auto_indent=True)
 
     parse.commit()
 
@@ -632,7 +633,7 @@ def get_if_xls_guardroot():
     ''' Return intf list if root_guard == 'Yes' '''
 
     wb_r = load_workbook(INPUT_XLS)
-    ws_r = wb_r[SHEET]
+    ws_r = wb_r.get_sheet_by_name(SHEET)
     DST_VCE_IF_COL = 2
     ROOT_GUARD_COL = 13
 
@@ -646,7 +647,7 @@ def get_if_to_qos_xls_dict(device):
     ''' Return {intf : QoS} dict '''
 
     wb_r = load_workbook(INPUT_XLS)
-    ws_r = wb_r[SHEET]
+    ws_r = wb_r.get_sheet_by_name(SHEET)
     DST_VCE_IF_COL = 2
     QOS_COL = 5
     NEXUS_AP = 6
@@ -768,7 +769,7 @@ def transform_routes_for_nexus(routes):
 #############################################
 ################### MAIN ####################
 #############################################
-
+acl = ['!', 'ip access-list MGW_OM', ' 10 permit ip X.Y.Z.K/27  ! VLAN190 PAMGW02_[O&M_LAN]', ' 1000 deny ip any any', '!']
 ############## ROUTES ###############
 
 
@@ -879,7 +880,7 @@ migr_dict_N3048 = get_migration_dictionary_N3048()
 cfg_intf_N3048 = get_normalized_if_OSWVCEVSW_cfg(device, if_not_to_be_migrated_N3048, migr_dict_N3048, qos_sp_def_N3048_dict)
 cfg_vlan_N3048 = get_normalized_vlan_OSWVCEVSW_cfg(vlan_not_to_be_migrated_N3048)
 
-cfg_N9508 = cfg_vlan_N9508 + cfg_intf_N9508 + cfg_svi_and_ospf_N9508 + routes_for_N9508 + routes_for_N6500
+cfg_N9508 = acl + cfg_vlan_N9508 + cfg_intf_N9508 + cfg_svi_and_ospf_N9508 + routes_for_N9508 + routes_for_N6500
 parse_out_N9508 = c.CiscoConfParse(cfg_N9508)
 parse_out_N9508.save_as(OSWVCE_CFG_TXT)
 

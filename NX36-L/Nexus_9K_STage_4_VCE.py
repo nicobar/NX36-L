@@ -122,14 +122,11 @@ def get_po_vce():
     ]
     return vce_po_cfg_h
 
-# qui si collega agli apparati
+
 def get_switch_mac_address():
     ''' return a string containing mac address '''
 
-    cmd = 'show spanning-tree bridge address'
-    #file_name = get_remote_cmd(OSW_SWITCH, cmd)
-    file_name = BASE + SITE + "DATA_SRC/CMD/" + "PAOSW011_show_spanning-tree_bridge_address.txt"
-
+    file_name = CMD_PATH + OSW_SWITCH + '_show_spanning-tree_bridge_address.txt'
     lst = from_file_to_cfg_as_list(file_name)
     if lst is not None:
         mac = lst[1].split()[1]
@@ -141,10 +138,7 @@ def get_switch_mac_address():
 def get_rb_per_vlan():
     ''' return a map {vlan: mac} '''
 
-    cmd = 'show spanning-tree root brief'
-    #file_name = get_remote_cmd(OSW_SWITCH, cmd)
-    file_name = BASE + SITE + "DATA_SRC/CMD/" + "PAOSW011_show_spanning-tree_root_brief.txt"
-
+    file_name = CMD_PATH + OSW_SWITCH + '_show_spanning-tree_root_brief.txt'
     show_list = from_file_to_cfg_as_list(file_name)
 
     mp = {}
@@ -169,57 +163,6 @@ def time_string():
 
     tempo = time.gmtime()
     return str(tempo[2]) + str(tempo[1]) + str(tempo[0])
-
-
-def get_remote_cmd(device, command):
-    ''' Return a file_name containing show command of device dev '''
-    my_time = time_string()
-    cmd_telnet_node = 'telnet ' + device
-    cmd_telnet_bridge = 'telnet ' + BRIDGE_NAME
-    nname_time = OSW_SWITCH + '-' + my_time
-    filename_out = BASE_DIR + nname_time + '_' + str.replace(command, ' ', '_') + '.txt'
-    fout = open(filename_out, 'w')
-    lower_string_to_expect = OSW_SWITCH + '#'
-#    show_cmd = []
-
-    string_to_expect = str.upper(lower_string_to_expect)
-    try:
-
-        child = pexpect.spawnu(cmd_telnet_bridge)
-
-        child.expect('login: ')
-        child.sendline(MyUsername)
-        child.expect('Password: ')
-        child.sendline(MyBridgePwd)
-
-        child.expect('\$')
-
-        child.sendline(cmd_telnet_node)
-        child.expect('username: ')
-        child.sendline(MyUsername)
-        child.expect('password: ')
-        child.sendline(MyTacacsPwd)
-
-        child.expect(string_to_expect)
-        child.sendline('term len 0')
-        child.expect(string_to_expect)
-
-        child.sendline(command)
-
-        child.logfile_read = fout
-
-        child.expect(string_to_expect)
-        child.terminate()
-        fout.close()
-
-#        for elem in open(filename_out ,'r'):
-#            show_cmd.append(elem.rstrip())
-#        return show_cmd
-        return filename_out
-
-    except pexpect.exceptions.TIMEOUT:
-        print('ERROR: Connect to VPN before launching this script')
-        return None
 
 
 def from_file_to_cfg_as_list(file_name):
@@ -384,7 +327,6 @@ def write_cfg(conf_list):
     for line in conf_list:
         f.write(line + '\n')
     f.close()
-
 #################### CONSTATNT ##################
 
 
@@ -418,6 +360,7 @@ OSW_CFG_TXT = BASE_DIR + OSW_SWITCH + '.txt'
 VSW_CFG_TXT_IN = BASE_DIR + OSW_SWITCH + 'VSW.txt'
 VCE_CFG_TXT_OUT = BASE_DIR + OSW_SWITCH + 'VCE_addendum.txt'
 VCE_CFG_TXT_IN = BASE_DIR + OSW_SWITCH + 'VCE.txt'
+
 
 ############## MAIN ###########
 print('Script Starts')

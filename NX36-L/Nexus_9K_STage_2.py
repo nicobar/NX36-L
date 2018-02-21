@@ -115,7 +115,7 @@ elif TYPE == 'Type4':
 
 
 wb = load_workbook(INPUT_XLS)
-ws = wb[SHEET]
+ws = wb.get_sheet_by_name(SHEET)
 
 
 for row in ws.rows:
