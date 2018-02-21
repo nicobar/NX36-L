@@ -234,7 +234,7 @@ be2po_map = {'interface Bundle-Ether111': 'interface Port-channel111',          
              }
 
 # vpeosw_to_vpevce maps all old trunks with new one
-
+# questi sono
 vpeosw_to_vpevce_map = { 'Bundle-Ether111': 'Bundle-Ether411',
                          'GigabitEthernet0/7/1/1' : 'Bundle-Ether411',
                          'GigabitEthernet0/2/1/2' : 'Bundle-Ether411',
