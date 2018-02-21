@@ -391,7 +391,7 @@ def further_interfaces():
     parse = c.CiscoConfParse(OSW_CFG_TXT)
 
     intf_obj_list = parse.find_objects(r'^interface .*Ethernet|^interface Port-channel.*')
-    if_list_cfg = [intf.text for intf in intf_obj_list]
+    if_list_cfg = [intf.text for intf in intf_obj_list if len(intf) > 3]
 
     wb = load_workbook(OUTPUT_XLS)
 
