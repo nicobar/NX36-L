@@ -327,15 +327,15 @@ def write_cfg(conf_list):
     for line in conf_list:
         f.write(line + '\n')
     f.close()
-
 #################### CONSTATNT ##################
 
 
-new_po = 'interface Port-channel411'
+new_po = 'interface Port-channel411' #4 e' fisso, 1 e' il sito e l ultimo numero e' la coppia
 
 # be2po_map OR BETTER vpe_to_osw_if_mapping reports all trunk interfaces (main BE/PO and voice/sig trunks)
 # This MUST BE CONFIGURED on STAGE_4 both VCE and VPE steps
 #
+
 be2po_map = {'interface Bundle-Ether111': 'interface Port-channel111',               # This is BE <--> PO mapping
              'interface GigabitEthernet0/2/1/1': 'interface GigabitEthernet4/6',  # This is VOICE/SIG TRUNK mapping
              'interface GigabitEthernet0/7/1/1': 'interface GigabitEthernet4/7',  # This is VOICE/SIG TRUNK mapping
@@ -348,15 +348,6 @@ OSW_SWITCH = 'PAOSW011'
 VSW_SWITCH = 'PAVSW01101'
 VPE_ROUTER = 'PAVPE013'
 VCE_SWITCH = 'PAVCE011'
-
-SITE = 'PA01/'
-
-BASE = '/mnt/hgfs/VM_shared/VF-2017/NMP/'
-
-
-CMD_PATH = BASE + SITE + 'DATA_SRC/CMD/'
-BASE_DIR = BASE + SITE + OSW_SWITCH + '/Stage_4/VCE/'
-
 
 VPE_CFG_TXT = BASE_DIR + VPE_ROUTER + '.txt'
 OSW_CFG_TXT = BASE_DIR + OSW_SWITCH + '.txt'

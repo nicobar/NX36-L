@@ -3,23 +3,23 @@ from openpyxl.workbook import Workbook
 from openpyxl.styles import PatternFill
 import ciscoconfparse as c
 import re
-
+import json
 
 #############################################
 ################# VARIABLES #################
 #############################################
 
-SWITCH = 'MIOSW057'
-#INFRA_CH_GRP_LIST = [1,133]
-SHEET = SWITCH
-BASE = '/mnt/hgfs/VM_shared/VF-2017/NMP/'
-SITE = 'MI05/'
-BASE_DIR = BASE + SITE + SWITCH + '/Stage_1/'
+site_config = {}
+with open("site_configs/site_config_PAOSW012.json") as f:
+    site_config = json.load(f)
 
+base_dir = site_config['base'] + site_config['site'] + site_config['switch'] + "/Stage_1/"
 
-INPUT_XLS = BASE_DIR + SWITCH + '_DB_MIGRATION.xlsx'
-OUTPUT_XLS = BASE_DIR + SWITCH + '_OUT_DB.xlsx'
-OSW_CFG_TXT = BASE_DIR + SWITCH + '.txt'
+INPUT_XLS = base_dir + site_config['switch'] + '_DB_MIGRATION.xlsx'
+OUTPUT_XLS =   base_dir+ site_config['switch'] + '_OUT_DB.xlsx'
+OSW_CFG_TXT = base_dir  + site_config['switch'] + '.txt'
+
+SHEET = site_config['sheet']
 
 
 # +-----0-A------+-----1-B------+------2-C------+---3-D--+---4-E-+-----5-F----+-------6-G---+-------7-H---------+-------8-I-----+-------9-J-----+-------10-K-----+----11-L----+-----12-M-------+---13-N----------+---14-O----------+---15-P----------+
@@ -64,7 +64,7 @@ def get_string_from_range_to_list(range_str):
 
 def get_allowed_vlan_list(if_cfg, SEL):
     ''' Get interface configuration block as a list
-        and returns a list (SEL = 'LIST') or string (SEL = "STRING")  
+        and returns a list (SEL = 'LIST') or string (SEL = "STRING")
         of trunk allowed VLANS '''
 
     s = ''
@@ -229,7 +229,7 @@ def colour_output_xlsx():
     '''Get OUTPUT_XLS and  colors lines to help people on check interfaces '''
 
     wb = load_workbook(OUTPUT_XLS)
-    ws = wb.get_sheet_by_name(SHEET)
+    ws = wb[SHEET]
 
     MAX_COL = ws.max_column - 1
     MAX_COLUMN_COLOR = MAX_COL
@@ -287,7 +287,7 @@ def readin_xls_writeout_xls():
     wb_r = load_workbook(INPUT_XLS)
     wb_w = Workbook()
 
-    ws_r = wb_r.get_sheet_by_name(SHEET)
+    ws_r = wb_r[SHEET]
     ws_w = wb_w.create_sheet(index=0, title=SHEET)
 
     MAX_COL = 15

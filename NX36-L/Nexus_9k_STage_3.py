@@ -3,36 +3,38 @@ import ciscoconfparse as c
 import re
 import ipaddress
 import itertools
+import json
 
+#############################################
+################# VARIABLES #################
+#############################################
 
-######################################################
-################# VARIABLES/CONSTANT #################
-######################################################
+site_config = {}
+with open("site_config_MIOSW058.json") as f:
+    site_config = json.load(f)
 
-SWITCH = 'BOOSW016'
+base_dir = site_config['base'] + site_config['site'] + site_config['switch'] + "/Stage_3/"
 
-SHEET = SWITCH
+INPUT_XLS = base_dir + site_config['switch'] + '_OUT_DB_OPT.xlsx'
+OSW_CFG_TXT = base_dir  + site_config['switch'] + '.txt'
+
+SHEET = site_config['sheet']
+SWITCH = site_config['switch']
 
 VLAN_FROM_XLS = True  # IF TRUE THEN XLS IS TRUSTABLE AS TRUSTED VLAN' SOURCE
 
-BASE = '/mnt/hgfs/VM_shared/VF-2017/NMP/'
-SITE = 'BO01-test/'
-BASE_DIR = BASE + SITE + SWITCH + '/Stage_3/'
+OSWVCE_CFG_TXT = base_dir + SWITCH + 'VCE' + '.txt'
+OSWVSW_CFG_TXT = base_dir + SWITCH + 'VSW' + '.txt'
 
-INPUT_XLS = BASE_DIR + SWITCH + '_OUT_DB_OPT.xlsx'
-OSW_CFG_TXT = BASE_DIR + SWITCH + '.txt'
-OSWVCE_CFG_TXT = BASE_DIR + SWITCH + 'VCE' + '.txt'
-OSWVSW_CFG_TXT = BASE_DIR + SWITCH + 'VSW' + '.txt'
-
-OTHER_SWITCH = 'BOOSW013'
+OTHER_SWITCH = site_config['other_switch']
 
 
-OTHER_BASE_DIR = BASE + SITE + OTHER_SWITCH + '/Stage_3/'
-OTHER_INPUT_XLS = OTHER_BASE_DIR + OTHER_SWITCH + '_OUT_DB_OPT.xlsx'
+OTHER_BASE_DIR = base_dir + site_config['site'] + OTHER_SWITCH + '/Stage_3/'
+OTHER_INPUT_XLS = base_dir + OTHER_SWITCH + '_OUT_DB_OPT.xlsx'
 OTHER_SHEET = OTHER_SWITCH
 
-PO_OSW_OSW = r'^interface Port-channel1$'
-PO_OSW_VPE = r'^interface Port-channel116$'
+PO_OSW_OSW = r'^interface Port-channel' + site_config['portch_OSW_OSW'] + "$"
+PO_OSW_VPE = r'^interface Port-channel' + site_config['portch_OSW_VPE'] + "$"
 
 qos_sp_def_N9508_dict = {
     'U': ' service-policy type qos input UNTRUST',

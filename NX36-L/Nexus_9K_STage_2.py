@@ -1,25 +1,23 @@
 from openpyxl import load_workbook
-
+import json
 
 def enum(**enums):
     return type('Enum', (), enums)
 
 
-SWITCH = 'GEOSW012'
+site_config = {}
+with open("site_config_MIOSW058.json") as f:
+    site_config = json.load(f)
 
+TYPE = site_config['type']
 
-TYPE = 'Type2'
-#TYPE = 'Type3'
-#TYPE = 'Type4'
+base_dir = site_config['base'] + site_config['site'] + site_config['switch'] + "/Stage_2/"
 
+INPUT_XLS = base_dir + site_config['switch'] + '_OUT_DB_OPT.xlsx'
 
-BASE = '/mnt/hgfs/VM_shared/VF-2017/NMP/'
-SITE = 'GE01/'
-BASE_DIR = BASE + SITE + SWITCH + '/Stage_2/'
+SHEET = site_config['sheet']
+SWITCH = site_config['switch']
 
-INPUT_XLS = BASE_DIR + SWITCH + '_OUT_DB_OPT.xlsx'
-
-SHEET = SWITCH
 
 # +-XG-+FREE+-1G-+----Copper----+    PX
 #  OOOO FFFF OOOO CCCC CCCC CCNN
