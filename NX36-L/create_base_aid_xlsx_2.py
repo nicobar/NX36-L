@@ -3,7 +3,6 @@
 ##############################################
 
 
-import pexpect
 import ciscoconfparse as c
 from openpyxl.workbook import Workbook
 
@@ -14,21 +13,18 @@ from openpyxl.workbook import Workbook
 
 def manage_interface_description(wb, osw_list):
 
-    #    cmd = 'show interfaces description'
     sheet = 'show_interfaces_description'
-#    filename = []
+
     ws = wb.create_sheet(title=sheet, index=0)
 
     print('Starting manage_interface_description')
 
-#     for node in osw_list:
-#         filename.append(get_remote_cmd(node, cmd))
     filename = [CMD_PATH + osw_list[0] + '_' + sheet + '.txt', CMD_PATH + osw_list[1] + '_' + sheet + '.txt']
 
     index_first_file = 0
 
     for file in filename:
-        #path2file = AID_PATH + file
+
         with open(file, 'r') as fin:
             if index_first_file == 0:
                 myrow = 1
@@ -46,21 +42,18 @@ def manage_interface_description(wb, osw_list):
 
 
 def manage_standby_brief(wb, osw_list):
-    #    cmd = 'show standby brief'
+
     sheet = 'show_standby_brief'
-#    filename = []
+
     ws = wb.create_sheet(title=sheet, index=0)
 
     print('Starting manage_standby brief')
-
-#     for node in osw_list:
-#         filename.append(get_remote_cmd(node, cmd))
 
     filename = [CMD_PATH + osw_list[0] + '_' + sheet + '.txt', CMD_PATH + osw_list[1] + '_' + sheet + '.txt']
     index_first_file = 0
 
     for file in filename:
-        #path2file = AID_PATH + file
+
         with open(file, 'r') as fin:
             if index_first_file == 0:
                 myrow = 1
@@ -78,21 +71,18 @@ def manage_standby_brief(wb, osw_list):
 
 
 def manage_vrrp_brief(wb, osw_list):
-    #    cmd = 'show vrrp brief'
+
     sheet = 'show_vrrp_brief'
-#    filename = []
+
     ws = wb.create_sheet(title=sheet, index=0)
 
     print('Starting manage_vrrp_brief')
-
-#    for node in osw_list:
-#        filename.append(get_remote_cmd(node, cmd))
 
     filename = [CMD_PATH + osw_list[0] + '_' + sheet + '.txt', CMD_PATH + osw_list[1] + '_' + sheet + '.txt']
     index_first_file = 0
 
     for file in filename:
-        #path2file = AID_PATH + file
+
         with open(file, 'r') as fin:
             if index_first_file == 0:
                 myrow = 1
@@ -110,9 +100,9 @@ def manage_vrrp_brief(wb, osw_list):
 
 
 def manage_interface_trunk(wb, osw_list):
-    #    cmd = 'show interface {} trunk'.format(OSW2OSW_PO)
+
     sheet = 'show_interface_CE2CE_trunk'
-#    filename = []
+
     ws = wb.create_sheet(title=sheet, index=0)
     text = ''
     lst = []
@@ -120,12 +110,9 @@ def manage_interface_trunk(wb, osw_list):
 
     print('Starting manage_interface_trunk')
 
-#    for node in osw_list:
-#        filename.append(get_remote_cmd(node, cmd))
-
     filename = [CMD_PATH + osw_list[0] + '_' + sheet + '.txt', CMD_PATH + osw_list[1] + '_' + sheet + '.txt']
     for file in filename:
-        #path2file = AID_PATH + file
+
         with open(file, 'r') as fin:
             text += fin.read()
 
@@ -133,7 +120,7 @@ def manage_interface_trunk(wb, osw_list):
     first, second = get_indexes(text_list)
 
     for index in (first, second):
-        # in next line _ is po
+
         _, vlan_string = text_list[index + 1].split()
         vlan_list = vlan_string.split(',')
 
@@ -164,11 +151,10 @@ def manage_interface_trunk(wb, osw_list):
 
 def manage_vlan_brief(wb, osw_list):
 
-    #    cmd = 'show vlan brief'
     sheet_osw1 = 'show_vlan_brief_OSW1'
     sheet_osw2 = 'show_vlan_brief_OSW2'
     sheet_osw1osw2 = 'show_vlan_brief'
-#    filename = []
+
     osw_vlanbrief_dict = dict()  # osw: fin.readlines()
     both_file_list = []
 
@@ -179,15 +165,10 @@ def manage_vlan_brief(wb, osw_list):
 
     print('Starting manage_vlan_brief')
 
-#     for node in osw_list:
-#         filename.append(get_remote_cmd(node, cmd))
-
     filename = [CMD_PATH + osw_list[0] + '_' + sheet_osw1osw2 + '.txt', CMD_PATH + osw_list[1] + '_' + sheet_osw1osw2 + '.txt']
 
     for file in filename:
-        #path2file = AID_PATH + file
 
-        #mylist = file.split('_')
         osw = file[len(CMD_PATH):-(5 + len(sheet_osw1osw2))]
 
         with open(file, 'r') as fin:
@@ -261,7 +242,6 @@ def manage_dot1q(wb, vce2vpe_po, nexus_file_dict, vpe_list, trunk_map):
         create_sheet_for_vce_tag(ws, vce2vpe_po, VCE_CFG_TXT_IN)
     print('End manage_dot1q on VCE')
 
-    #for vpe_file in vpe_file_list:
     for vpe_node, vpe_file in zip(trunk_map.keys(), vpe_file_list):
         ws = wb.create_sheet(title=vpefile_to_sheet_dict[vpe_file], index=0)
         create_sheet_for_vpe_tag(ws, vpe_node, vpe_file, trunk_map)
@@ -322,10 +302,8 @@ def manage_static_routes(wb, vce_file_list):
 def get_rb_per_vlan(osw):
     ''' return a map {vlan: mac} indicating RB for osw '''
 
-    #cmd = 'show spanning-tree root brief'
     sheet = 'show_spanning-tree_root_brief'
 
-    #file_name = get_remote_cmd(osw, cmd)
     file_name = CMD_PATH + osw + '_' + sheet + '.txt'
 
     show_list = from_file_to_cfg_as_list(file_name)
@@ -349,7 +327,6 @@ def get_rb_per_vlan(osw):
 def get_switch_mac_address(osw):
     ''' return a string containing mac address of osw '''
 
-    #cmd = 'show spanning-tree bridge address'
     sheet = 'show_spanning-tree_bridge_address'
 
     file_name = CMD_PATH + osw + '_' + sheet + '.txt'
@@ -467,49 +444,6 @@ def write_vlan_brief_on_sheet(ws, vlan_brief_list):
             continue
 
 
-# def get_remote_cmd(node_name, cmd):
-#     ''' This function read devices names from file,
-#      connects to them and write on file output of a file '''
-#
-#     cmd_telnet_bridge = 'telnet ' + BRIDGE_NAME
-#
-#     cmd_telnet_node = 'telnet ' + node_name
-#     cmd_h = str.replace(cmd, ' ', '_')
-#     #
-#     file_name = node_name + '_' + cmd_h + '.txt'
-#
-#     lower_string_to_expect = node_name + '#'
-#
-#     string_to_expect = str.upper(lower_string_to_expect)
-#
-#     child = pexpect.spawn(cmd_telnet_bridge, encoding='utf-8')
-#
-#     child.expect('login: ')
-#     child.sendline(MyUsername)
-#     child.expect('Password: ')
-#     child.sendline(MyBridgePwd)
-#     child.expect('\$')
-#
-#     child.sendline(cmd_telnet_node)
-#     child.expect('username: ')
-#     child.sendline(MyUsername)
-#     child.expect('password: ')
-#     child.sendline(MyTacacsPwd)
-#     child.expect(string_to_expect)
-#     child.sendline('term len 0')
-#     child.expect(string_to_expect)
-#
-#     child.sendline(cmd)
-#
-#     with open(AID_PATH + file_name, 'w') as fout:
-#         child.logfile_read = fout
-#         child.expect(string_to_expect)
-#
-#     child.terminate()
-#
-#     return file_name
-
-
 def from_range_to_list(range_str):
     ''' tansform '1-3' in [1,2,3] '''
 
@@ -549,18 +483,14 @@ VPE_LIST = ['PAVPE013',
 OSW2OSW_PO = 'Port-channel1'
 VCE2VPE_PO = 'Port-channel411'
 # trunk_map = {vpe_node: [trunk1, trunk2, ]} where trunks are VPE to OSW trunks by VPE side
-TRUNK_MAP = {VPE_LIST[0]: ['Bundle-Ether121', 'GigabitEthernet0/7/1/1', 'GigabitEthernet0/2/1/2', 'GigabitEthernet0/7/1/2'],
-             VPE_LIST[1]: ['Bundle-Ether122', 'GigabitEthernet0/7/1/1', 'GigabitEthernet0/2/1/2', 'GigabitEthernet0/7/1/2']}
+TRUNK_MAP = {VPE_LIST[0]: ['Bundle-Ether111', 'GigabitEthernet0/2/1/1', 'GigabitEthernet0/2/1/2', 'GigabitEthernet0/7/1/1'],
+             VPE_LIST[1]: ['Bundle-Ether112', 'GigabitEthernet0/2/1/1', 'GigabitEthernet0/2/1/2', 'GigabitEthernet0/7/1/1']}
 BASE = '/mnt/hgfs/VM_shared/VF-2017/NMP/'
 SITE = 'PA01/'
 AID_PATH = BASE + SITE + 'AID/'
 CMD_PATH = BASE + SITE + 'DATA_SRC/CMD/'
 
 OUTPUT_XLS = AID_PATH + 'AID_to_{}_NMP.xlsx'.format(SITE[:-1])
-# BRIDGE_NAME = '10.192.10.8'
-# MyUsername = 'zzasp70'
-# MyBridgePwd = "SPra0094"
-# MyTacacsPwd = "0094SPra_"
 
 
 NEXUS_FILE_DICT = {OSW_LIST[0]: [OSW_LIST[0] + 'VCE.txt',
