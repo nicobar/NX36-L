@@ -1,7 +1,6 @@
 import json
 import os
 
-
 SITES_CONFIG_FOLDER = os.path.dirname(os.path.realpath(__file__)) + "/../Sites/"
 
 def open_file(path):

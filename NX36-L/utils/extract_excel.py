@@ -3,7 +3,6 @@ from copy import copy
 import openpyxl
 from get_site_data import get_site_configs, SITES_CONFIG_FOLDER
 
-
 def get_excel_sheet(filename):
     wb = openpyxl.load_workbook(filename)
     first_sheet = wb.sheetnames[0]

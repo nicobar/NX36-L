@@ -9,6 +9,13 @@ sys.path.insert(0, 'utils')
 
 from get_site_data import get_site_configs, SITES_CONFIG_FOLDER
 
+def save_wb(wb, dest_path, file_name):
+    import os
+    filepath = dest_path + file_name
+    if not os.path.exists(dest_path):
+        os.makedirs(dest_path)
+    wb.save(filepath)
+
 #############################################
 ################# VARIABLES #################
 #############################################
@@ -376,7 +383,7 @@ def readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, SHEET, OUTPUT_XLS ):
     print("End F1")
 
 
-def further_interfaces(OSW_CFG_TXT, SHEET, OUTPUT_XLS):
+def further_interfaces(site_config, OSW_CFG_TXT, SHEET, OUTPUT_XLS):
     parse = c.CiscoConfParse(OSW_CFG_TXT)
 
     intf_obj_list = parse.find_objects(r'^interface .*Ethernet|^interface Port-channel.*')
@@ -402,6 +409,7 @@ def further_interfaces(OSW_CFG_TXT, SHEET, OUTPUT_XLS):
         cfg_less_xls_list.sort(key=natural_keys)
 
         ws.cell(row=START_ROW, column=1).value = "Le seguenti interfaccie sono utilizzate nella cfg ma non compaiono nell' xlsx"
+
         for elem, line in zip(cfg_less_xls_list, range(START_ROW + 1, START_ROW + 1 + len(cfg_less_xls_list))):
             ws.cell(row=line, column=1).value = elem
     elif (len_if_list_cfg - len_if_list_xls) == 0:
@@ -411,17 +419,22 @@ def further_interfaces(OSW_CFG_TXT, SHEET, OUTPUT_XLS):
         xls_less_cfg_list = list(if_set_xls - if_set_cfg)
         xls_less_cfg_list.sort(key=natural_keys)
         ws.cell(row=START_ROW, column=1).value = "Le seguenti interfaccie sono presenti nell XLSX ma non nella cfg--> VERIFICARE"
+
+        for column in range(1,16):
+            ws.cell(START_ROW, column).fill = PatternFill(start_color='CCCCCC', end_color='CCCCCC',
+                          fill_type='solid')
+
         for elem, line in zip(xls_less_cfg_list, range(START_ROW + 1, START_ROW + 1 + len(xls_less_cfg_list))):
             ws.cell(row=line, column=1).value = elem
 
-    wb.save(filename=OUTPUT_XLS)
-
+    wb.save(OUTPUT_XLS)
+    dest_path = site_config.base_dir + site_config.site + "/DATA_SRC/XLS/OUTPUT_STAGE_1/"
+    save_wb(wb, dest_path, site_config.switch + '_OUT_DB.xlsx')
 
 def run(site_configs):
     for site_config in site_configs:
 
         base_dir = site_config.base_dir + site_config.site + site_config.switch + "/Stage_1/"
-
         INPUT_XLS = base_dir + site_config. switch + '_DB_MIGRATION.xlsx'
         OUTPUT_XLS = base_dir + site_config.switch + '_OUT_DB.xlsx'
         OSW_CFG_TXT = base_dir + site_config.switch + '.txt'
@@ -430,11 +443,11 @@ def run(site_configs):
 
         readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, site_config.sheet, OUTPUT_XLS)
         colour_output_xlsx(site_config.sheet, OUTPUT_XLS)
-        further_interfaces(OSW_CFG_TXT, site_config.sheet, OUTPUT_XLS)
+        further_interfaces(site_config, OSW_CFG_TXT, site_config.sheet, OUTPUT_XLS)
         create_legendas(OUTPUT_XLS)
         print('End script')
 
-def propare_stage(site_configs):
+def prepare_stage(site_configs):
     from download_site_commands import run_get_command
     from extract_excel import run_extract_excel
     run_get_command(site_configs)
@@ -442,5 +455,5 @@ def propare_stage(site_configs):
 
 if __name__ == "__main__":
     site_configs = get_site_configs(SITES_CONFIG_FOLDER)
-    propare_stage(site_configs)
+    #prepare_stage(site_configs)
     run(site_configs)
