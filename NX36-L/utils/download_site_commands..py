@@ -29,7 +29,6 @@ class Get_Command():
         self.password = credentials["password"]
         self.base_url = "https://mimir-prod.cisco.com/api/mimir/np/"
         self.deviceID = ""
-        self.base_utils_dir = "../"
 
     def set_deviceID(self, id):
         self.deviceID = id
@@ -49,8 +48,7 @@ class Get_Command():
         data = json.loads(data.text)
         return (data["data"][0]["rawData"])
 
-if __name__ == "__main__":
-    site_configs = get_site_configs(SITES_FOLDER)
+def run(site_configs):
     credentials = open_file("pass.json")
 
     for site_config in site_configs:
@@ -59,10 +57,13 @@ if __name__ == "__main__":
         save_command.set_deviceID(id)
         command = save_command.get_running_conf()
 
-        dest_path = [ save_command.base_utils_dir + site_config.base_dir +
-                      site_config.site + site_config.switch + "/Stage_1/"]
-        dest_path.append( save_command.base_utils_dir + site_config.base_dir +
-                          site_config.site + "/DATA_SRC/CFG/")
-        print(dest_path)
+        dest_path = [site_config.base_dir +
+                     site_config.site + site_config.switch + "/Stage_1/"]
+        dest_path.append(site_config.base_dir +
+                         site_config.site + "DATA_SRC/CFG/")
         for path in dest_path:
             save_result(command, path, site_config.switch)
+
+if __name__ == "__main__":
+    site_configs = get_site_configs(SITES_FOLDER)
+    run(site_configs)

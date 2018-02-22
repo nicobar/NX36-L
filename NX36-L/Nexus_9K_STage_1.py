@@ -4,23 +4,11 @@ from openpyxl.styles import PatternFill
 import ciscoconfparse as c
 import re
 import json
+from get_site_data import get_site_configs, SITES_FOLDER
 
 #############################################
 ################# VARIABLES #################
 #############################################
-
-site_config = {}
-with open("site_configs/site_config_PAOSW012.json") as f:
-    site_config = json.load(f)
-
-base_dir = site_config['base'] + site_config['site'] + site_config['switch'] + "/Stage_1/"
-
-INPUT_XLS = base_dir + site_config['switch'] + '_DB_MIGRATION.xlsx'
-OUTPUT_XLS =   base_dir+ site_config['switch'] + '_OUT_DB.xlsx'
-OSW_CFG_TXT = base_dir  + site_config['switch'] + '.txt'
-
-SHEET = site_config['sheet']
-
 
 # +-----0-A------+-----1-B------+------2-C------+---3-D--+---4-E-+-----5-F----+-------6-G---+-------7-H---------+-------8-I-----+-------9-J-----+-------10-K-----+----11-L----+-----12-M-------+---13-N----------+---14-O----------+---15-P----------+
 # +--SRC_OSW_IF--+--DST_VCE_IF--+--Access-Type--+--VLAN--+--QoS--+--Nexus_AP--+--Member/PO--+-----Descr---------+----Duplex-----+-----Speed-----+---Media Type---+---Action---+---Root-Guard---+---System-type---+---Check_Descr---+----Temp---------+
@@ -428,8 +416,23 @@ def further_interfaces():
     wb.save(filename=OUTPUT_XLS)
 
 
-readin_xls_writeout_xls()
-colour_output_xlsx()
-further_interfaces()
-create_legendas()
-print('End script')
+def run(site_configs):
+    for site_config in site_configs:
+
+        base_dir = site_config.base_dir + site_config.site + site_config.switch + "/Stage_1/"
+
+        INPUT_XLS = base_dir + site_config['switch'] + '_DB_MIGRATION.xlsx'
+        OUTPUT_XLS = base_dir + site_config['switch'] + '_OUT_DB.xlsx'
+        OSW_CFG_TXT = base_dir + site_config['switch'] + '.txt'
+
+        SHEET = site_config['sheet']
+
+        readin_xls_writeout_xls()
+        colour_output_xlsx()
+        further_interfaces()
+        create_legendas()
+        print('End script')
+
+if __name__ == "__main__":
+    site_configs = get_site_configs(SITES_FOLDER)
+    run(site_configs)
