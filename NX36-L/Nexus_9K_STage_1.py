@@ -3,8 +3,11 @@ from openpyxl.workbook import Workbook
 from openpyxl.styles import PatternFill
 import ciscoconfparse as c
 import re
-import json
-from get_site_data import get_site_configs, SITES_FOLDER
+
+import sys
+sys.path.insert(0, 'utils')
+
+from get_site_data import get_site_configs, SITES_CONFIG_FOLDER
 
 #############################################
 ################# VARIABLES #################
@@ -18,7 +21,6 @@ from get_site_data import get_site_configs, SITES_FOLDER
 
 def atoi(text):
     ''' from string to int'''
-
     return int(text) if text.isdigit() else text
 
 
@@ -28,7 +30,6 @@ def natural_keys(text):
     http://nedbatchelder.com/blog/200712/human_sorting.html
     (See Toothy's implementation in the comments)
     '''
-
     return [atoi(c) for c in re.split('(\d+)', text)]
 
 
@@ -126,15 +127,15 @@ def get_channel_group(if_cfg):
     return ch_gr
 
 
-def create_legendas():
+def create_legendas(OUTPUT_XLS):
     wb = load_workbook(OUTPUT_XLS)
-    create_qos_legendas(wb)
-    create_color_legendas(wb)
-    create_check_legendas(wb)
-    create_ap_legendas(wb)
+    create_qos_legendas(wb, OUTPUT_XLS)
+    create_color_legendas(wb, OUTPUT_XLS)
+    create_check_legendas(wb, OUTPUT_XLS)
+    create_ap_legendas(wb, OUTPUT_XLS)
 
 
-def create_qos_legendas(my_wb):
+def create_qos_legendas(my_wb, OUTPUT_XLS):
     QOS_SHEET = 'QoS Legenda'
     ws = my_wb.create_sheet(index=1, title=QOS_SHEET)
 
@@ -148,7 +149,7 @@ def create_qos_legendas(my_wb):
     my_wb.save(filename=OUTPUT_XLS)
 
 
-def create_color_legendas(my_wb):
+def create_color_legendas(my_wb, OUTPUT_XLS):
     COLOR_SHEET = 'Color Legenda'
     ws = my_wb.create_sheet(index=2, title=COLOR_SHEET)
 
@@ -179,7 +180,7 @@ def create_color_legendas(my_wb):
     my_wb.save(filename=OUTPUT_XLS)
 
 
-def create_check_legendas(my_wb):
+def create_check_legendas(my_wb, OUTPUT_XLS):
     CHECK_SHEET = 'Check Legenda'
     ws = my_wb.create_sheet(index=3, title=CHECK_SHEET)
 
@@ -191,7 +192,7 @@ def create_check_legendas(my_wb):
     my_wb.save(filename=OUTPUT_XLS)
 
 
-def create_ap_legendas(my_wb):
+def create_ap_legendas(my_wb, OUTPUT_XLS):
     AP_SHEET = 'Access Point Legenda'
     ws = my_wb.create_sheet(index=1, title=AP_SHEET)
 
@@ -213,7 +214,7 @@ def create_ap_legendas(my_wb):
     my_wb.save(filename=OUTPUT_XLS)
 
 
-def colour_output_xlsx():
+def colour_output_xlsx(SHEET, OUTPUT_XLS):
     '''Get OUTPUT_XLS and  colors lines to help people on check interfaces '''
 
     wb = load_workbook(OUTPUT_XLS)
@@ -264,7 +265,7 @@ def get_descr(if_cfg):
     return desc_from_cfg
 
 
-def readin_xls_writeout_xls():
+def readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, SHEET, OUTPUT_XLS ):
 
     header_out = ['SRC OSW IF', 'DST VCE IF', 'Access Type', 'VLAN', 'QoS', 'Nexus AP', 'Member/PO',
                   'Descr', 'Duplex', 'Speed', 'Media Type', 'Action', 'Root-Guard', 'System Type', 'Check Descr']
@@ -375,7 +376,7 @@ def readin_xls_writeout_xls():
     print("End F1")
 
 
-def further_interfaces():
+def further_interfaces(OSW_CFG_TXT, SHEET, OUTPUT_XLS):
     parse = c.CiscoConfParse(OSW_CFG_TXT)
 
     intf_obj_list = parse.find_objects(r'^interface .*Ethernet|^interface Port-channel.*')
@@ -421,18 +422,25 @@ def run(site_configs):
 
         base_dir = site_config.base_dir + site_config.site + site_config.switch + "/Stage_1/"
 
-        INPUT_XLS = base_dir + site_config['switch'] + '_DB_MIGRATION.xlsx'
-        OUTPUT_XLS = base_dir + site_config['switch'] + '_OUT_DB.xlsx'
-        OSW_CFG_TXT = base_dir + site_config['switch'] + '.txt'
+        INPUT_XLS = base_dir + site_config. switch + '_DB_MIGRATION.xlsx'
+        OUTPUT_XLS = base_dir + site_config.switch + '_OUT_DB.xlsx'
+        OSW_CFG_TXT = base_dir + site_config.switch + '.txt'
 
-        SHEET = site_config['sheet']
+        SHEET = site_config.sheet
 
-        readin_xls_writeout_xls()
-        colour_output_xlsx()
-        further_interfaces()
-        create_legendas()
+        readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, site_config.sheet, OUTPUT_XLS)
+        colour_output_xlsx(site_config.sheet, OUTPUT_XLS)
+        further_interfaces(OSW_CFG_TXT, site_config.sheet, OUTPUT_XLS)
+        create_legendas(OUTPUT_XLS)
         print('End script')
 
+def propare_stage(site_configs):
+    from download_site_commands import run_get_command
+    from extract_excel import run_extract_excel
+    run_get_command(site_configs)
+    run_extract_excel(site_configs)
+
 if __name__ == "__main__":
-    site_configs = get_site_configs(SITES_FOLDER)
+    site_configs = get_site_configs(SITES_CONFIG_FOLDER)
+    propare_stage(site_configs)
     run(site_configs)

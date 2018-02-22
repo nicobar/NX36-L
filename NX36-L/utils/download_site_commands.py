@@ -1,7 +1,7 @@
 import requests
 import json
 import os
-from get_site_data import get_site_configs, SITES_FOLDER, open_file
+from get_site_data import get_site_configs, SITES_CONFIG_FOLDER, open_file
 
 '''
 cli available
@@ -48,8 +48,8 @@ class Get_Command():
         data = json.loads(data.text)
         return (data["data"][0]["rawData"])
 
-def run(site_configs):
-    credentials = open_file("pass.json")
+def run_get_command(site_configs):
+    credentials = open_file(os.path.dirname(os.path.realpath(__file__)) + "/pass.json")
 
     for site_config in site_configs:
         save_command = Get_Command(credentials, site_config)
@@ -66,4 +66,4 @@ def run(site_configs):
 
 if __name__ == "__main__":
     site_configs = get_site_configs(SITES_FOLDER)
-    run(site_configs)
+    run_get_command(site_configs)

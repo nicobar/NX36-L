@@ -1,7 +1,7 @@
 import json
 from copy import copy
 import openpyxl
-from get_site_data import get_site_configs, SITES_FOLDER
+from get_site_data import get_site_configs, SITES_CONFIG_FOLDER
 
 
 def get_excel_sheet(filename):
@@ -53,7 +53,7 @@ class Create_Excel():
                 self.copy_row(i,row)
                 i = i + 1
 
-def run(site_configs):
+def run_extract_excel(site_configs):
 
     for site_config in site_configs:
         original = get_excel_sheet(site_config.base_dir + "/Migrazione/Nexus_9k_new_v0.6.xlsx")
@@ -68,5 +68,5 @@ def run(site_configs):
         save_wb(wb, new_excel_file_path2, site_config.switch + "_DB_MIGRATION.xlsx")
 
 if __name__ == "__main__":
-    site_configs = get_site_configs(SITES_FOLDER)
-    run(site_configs)
+    site_configs = get_site_configs(SITES_CONFIG_FOLDER)
+    run_extract_excel(site_configs)

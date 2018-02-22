@@ -1,7 +1,8 @@
 import json
 import os
 
-SITES_FOLDER = "../Sites/"
+
+SITES_CONFIG_FOLDER = os.path.dirname(os.path.realpath(__file__)) + "/../Sites/"
 
 def open_file(path):
     with open(path) as f:
@@ -36,7 +37,7 @@ class SiteConfig():
         self.portch_OSW_VPE = site_config['portch_OSW_VPE']
 '''
 if __name__ == "__main__":
-    x = get_site_configs(SITES_FOLDER)
+    x = get_site_configs(SITES_CONFIG_FOLDER)
     for i in x:
        print(i.switch)
 '''
