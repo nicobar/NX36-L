@@ -1,0 +1,10 @@
+{
+    "switch": "PAOSW011",
+    "sheet": "PAOSW011",
+    "base_dir": "C:/Users/gcarlucc/Documents/Projects/Vodafone/",
+    "site": "Sites/PA01/",
+    "type": "Type2",
+    "other_switch": "PAOSW012",
+    "portch_OSW_OSW": "1",
+    "portch_OSW_VPE": "112"
+}
