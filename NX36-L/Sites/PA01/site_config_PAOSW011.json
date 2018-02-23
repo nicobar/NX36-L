@@ -1,10 +1,10 @@
 {
     "switch": "PAOSW011",
     "sheet": "PAOSW011",
-    "base_dir": "C:/Users/gcarlucc/Documents/Projects/Vodafone/",
-    "site": "Sites/PA01/",
+    "base_dir": "/mnt/hgfs/VM_shared/VF-2017/NMP/",
+    "site": "PA01_NEW/",
     "type": "Type2",
     "other_switch": "PAOSW012",
     "portch_OSW_OSW": "1",
-    "portch_OSW_VPE": "112"
+    "portch_OSW_VPE": "111"
 }
