@@ -64,6 +64,6 @@ def run_get_command(site_configs):
         for path in dest_path:
             save_result(command, path, site_config.switch)
 
-if __name__ == "__main__":
-    site_configs = get_site_configs(SITES_FOLDER)
-    run_get_command(site_configs)
+#if __name__ == "__main__":
+#    site_configs = get_site_configs(SITES_FOLDER)
+#    run_get_command(site_configs)

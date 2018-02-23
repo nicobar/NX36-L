@@ -54,8 +54,10 @@ class Create_Excel():
 
 def run_extract_excel(site_configs):
 
+    original = None
     for site_config in site_configs:
-        original = get_excel_sheet(site_config.base_dir + "/Migrazione/Nexus_9k_new_v0.6.xlsx")
+        if original == None:
+            original = get_excel_sheet(site_config.base_dir + "/Migrazione/Nexus_9k_new_v0.6.xlsx")
         new_excel, wb = create_new_excel(site_config.switch)
         new_site_db = Create_Excel([original, new_excel], site_config)
         new_site_db.extract_info()
@@ -66,6 +68,6 @@ def run_extract_excel(site_configs):
         save_wb(wb, new_excel_file_path1, site_config.switch + "_DB_MIGRATION.xlsx")
         save_wb(wb, new_excel_file_path2, site_config.switch + "_DB_MIGRATION.xlsx")
 
-if __name__ == "__main__":
-    site_configs = get_site_configs(SITES_CONFIG_FOLDER)
-    run_extract_excel(site_configs)
+#if __name__ == "__main__":
+#    site_configs = get_site_configs(SITES_CONFIG_FOLDER)
+#    run_extract_excel(site_configs)
