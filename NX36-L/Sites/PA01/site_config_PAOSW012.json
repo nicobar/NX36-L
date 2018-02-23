@@ -1,9 +1,8 @@
 {
     "switch": "PAOSW012",
-    "infra_ch_grp_list": " [1,133]",
     "sheet": "PAOSW012",
-     "base": "../../../Site/",
-    "site": "PA01/",
+    "base_dir": "C:/Users/gcarlucc/Documents/Projects/Vodafone/",
+    "site": "Sites/PA01/",
     "type": "Type2",
     "other_switch": "PAOSW011",
     "portch_OSW_OSW": "1",
