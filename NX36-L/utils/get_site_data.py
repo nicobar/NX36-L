@@ -12,15 +12,15 @@ def read_files_name(site_folder):
     for file_path in os.listdir(site_folder):
         box_name = file_path.split(".")[0]
         print(box_name)
-    return input("Enter site names from the list above that you want to use (Separate with spaces): ")
+    return input("Enter site name from the list above that you want to use (Separate with spaces): ")
 
 def get_site_configs(site_folder):
-    box_name_input = read_files_name(site_folder)
+    box_name = read_files_name(site_folder)
+    box_name = box_name + '/'
     site_configs = []
-    for box_name in box_name_input.split(" "):
-        box_name = box_name + '/'
-        for site_config_file in os.listdir(site_folder + box_name):
-            site_config = open_file(site_folder + box_name + site_config_file)
+    for site_config_file in os.listdir(site_folder + box_name):
+        site_data = open_file(site_folder + box_name + site_config_file)
+        for site_config in site_data:
             site_configs.append(SiteConfig(site_config))
     return site_configs
 
@@ -34,9 +34,8 @@ class SiteConfig():
         self.other_switch = site_config['other_switch']
         self.portch_OSW_OSW = site_config['portch_OSW_OSW']
         self.portch_OSW_VPE = site_config['portch_OSW_VPE']
-'''
-if __name__ == "__main__":
-    x = get_site_configs(SITES_CONFIG_FOLDER)
-    for i in x:
-       print(i.switch)
-'''
+
+#if __name__ == "__main__":
+#    x = get_site_configs(SITES_CONFIG_FOLDER)
+#    for i in x:
+#       print(i.switch)
