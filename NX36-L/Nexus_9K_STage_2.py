@@ -189,7 +189,7 @@ def create_dir(dest_path):
     if not os.path.exists(dest_path):
         os.makedirs(dest_path)
 
-def move_file(site_config, source_path, dest_path):
+def copy_file(site_config, source_path, dest_path):
     import shutil
     src_file = source_path + site_config.switch + "_checked_v1.0_OUT_DB_OPT.XLSX"
     dst_file = dest_path + site_config.switch + "_OUT_DB_OPT.XLSX"
@@ -203,7 +203,7 @@ def prepare_stage(site_configs):
             print("Data in the directory " + source_path + " are missing. Please create it.")
             exit(0)
         dest_path = site_config.base_dir + site_config.site + site_config.switch + "/Stage_2/"
-        move_file(site_config, source_path, dest_path)
+        copy_file(site_config, source_path, dest_path)
 
 def run(site_configs):
 

@@ -432,7 +432,6 @@ def further_interfaces(site_config, OSW_CFG_TXT, SHEET, OUTPUT_XLS):
     dest_path = site_config.base_dir + site_config.site + "/DATA_SRC/XLS/OUTPUT_STAGE_1/"
     save_wb(wb, dest_path, site_config.switch + '_OUT_DB.xlsx')
 
-
 def run(site_configs):
     for box_config in site_configs:
 

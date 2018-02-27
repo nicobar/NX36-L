@@ -51,6 +51,12 @@ class SiteConfig():
         self.free_temp_te = site_config['free_temp_te']
         self.portch_OSW_OSW = site_config['portch_OSW_OSW']
         self.portch_OSW_VPE = site_config['portch_OSW_VPE']
+        self.new_excel_file_paths = [self.base_dir + self.site +
+                                     self.switch + "/Stage_1/", self.base_dir + self.site +
+                                     "DATA_SRC/XLS/INPUT_STAGE_1/"]
+        self.conf_dest_path = [self.base_dir +
+                               self.site + self.switch + "/Stage_1/",
+                               self.base_dir + self.site + "DATA_SRC/CFG/"]
 
 #if __name__ == "__main__":
 #    x = get_site_configs(SITES_CONFIG_FOLDER)
