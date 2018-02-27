@@ -1,28 +1,37 @@
 import json
 import os
 
-SITES_CONFIG_FOLDER = os.path.dirname(os.path.realpath(__file__)) + "/../Sites/"
+# This is to know folder where the script is launched from +  "/../Sites/"
+# SITES_CONFIG_FOLDER = os.path.dirname(os.path.realpath(__file__)) + "/../Sites/"
+SITES_CONFIG_FOLDER = '/Documents/LiClipse Workspace/Sites/'
+
 
 def open_file(path):
     with open(path) as f:
-       return json.load(f)
+        return json.load(f)
 
 # this function reads the folders name in a folder
+
+
 def read_files_name(site_folder):
     for file_path in os.listdir(site_folder):
         box_name = file_path.split(".")[0]
         print(box_name)
     return input("Enter site name from the list above that you want to use (Separate with spaces): ")
 
+
 def get_site_configs(site_folder):
-    box_name = read_files_name(site_folder)
-    box_name = box_name + '/'
-    site_configs = []
-    for site_config_file in os.listdir(site_folder + box_name):
-        site_data = open_file(site_folder + box_name + site_config_file)
-        for site_config in site_data:
-            site_configs.append(SiteConfig(site_config))
+    site_name = read_files_name(site_folder)
+    site_name = site_name + '/'
+    box_configs = []
+    for site_config_file in os.listdir(site_folder + site_name):
+        # the .json file is the site's cfg file, other files could be reside there as note files
+        if '.json' in site_config_file:
+            site_data = open_file(site_folder + site_name + site_config_file)
+            for box_config in site_data:
+                box_configs.append(SiteConfig(site_config))
     return site_configs
+
 
 class SiteConfig():
     def __init__(self, site_config):
