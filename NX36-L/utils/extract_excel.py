@@ -1,7 +1,7 @@
 import json
 from copy import copy
 import openpyxl
-from get_site_data import get_site_configs, SITES_CONFIG_FOLDER
+from get_site_data import get_site_configs, exists, SITES_CONFIG_FOLDER
 
 def get_excel_sheet(filename):
     wb = openpyxl.load_workbook(filename)
@@ -52,21 +52,36 @@ class Create_Excel():
                 self.copy_row(i,row)
                 i = i + 1
 
-def run_extract_excel(site_configs):
+def get_excel(site_configs):
 
     original = None
-    for site_config in site_configs:
-        if original == None:
-            original = get_excel_sheet(site_config.base_dir + "/Migrazione/Nexus_9k_new_v0.6.xlsx")
-        new_excel, wb = create_new_excel(site_config.switch)
-        new_site_db = Create_Excel([original, new_excel], site_config)
-        new_site_db.extract_info()
-        new_excel_file_path1 = site_config.base_dir + site_config.site +\
-                               site_config.switch + "/Stage_1/"
-        new_excel_file_path2 = site_config.base_dir + site_config.site +\
-                               "DATA_SRC/XLS/INPUT_STAGE_1/"
-        save_wb(wb, new_excel_file_path1, site_config.switch + "_DB_MIGRATION.xlsx")
-        save_wb(wb, new_excel_file_path2, site_config.switch + "_DB_MIGRATION.xlsx")
+    for box_config in site_configs:
+
+        new_excel_file_paths= [box_config.base_dir + box_config.site + \
+                               box_config.switch + "/Stage_1/"]
+        new_excel_file_paths.append(box_config.base_dir + box_config.site + \
+                               "DATA_SRC/XLS/INPUT_STAGE_1/")
+
+        go_on = 0
+        for path in new_excel_file_paths:
+            if not exists(path + box_config.switch + "_DB_MIGRATION.xlsx"):
+                go_on = 1
+
+        if go_on:
+            print("Excel file is about to be extracted for " + box_config.switch + ".")
+            if original == None:
+                original = get_excel_sheet(box_config.base_dir + "/Migrazione/Nexus_9k_new_v0.6.xlsx")
+            new_excel, wb = create_new_excel(box_config.switch)
+            new_site_db = Create_Excel([original, new_excel], box_config)
+            new_site_db.extract_info()
+
+            for path in  new_excel_file_paths:
+               save_wb(wb, path, box_config.switch + "_DB_MIGRATION.xlsx")
+
+            print("Excel file has been extracted for " + box_config.switch + ".")
+        else:
+            print("Excel file is already in place for " + box_config.switch + ".")
+
 
 #if __name__ == "__main__":
 #    site_configs = get_site_configs(SITES_CONFIG_FOLDER)

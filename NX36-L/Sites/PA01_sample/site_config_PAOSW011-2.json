@@ -1,0 +1,30 @@
+[
+    {
+    "switch": "PAOSW011",
+    "sheet": "PAOSW011",
+    "base_dir": "C:/Users/gcarlucc/Documents/Projects/Vodafone/",
+    "site": "Sites/PA01_sample/",
+    "type": "Type2",
+    "other_switch": "PAOSW012",
+    "//": "below we set the number of temporary ports to be used for the port-channel 69",
+    "free_temp_opt": 0,
+    "free_temp_copper": 0,
+    "free_temp_te": 0,
+    "portch_OSW_OSW": "1",
+    "portch_OSW_VPE": "111"
+    },
+    {
+    "switch": "PAOSW012",
+    "sheet": "PAOSW012",
+    "base_dir": "C:/Users/gcarlucc/Documents/Projects/Vodafone/",
+    "site": "Sites/PA01_sample/",
+    "type": "Type2",
+    "other_switch": "PAOSW011",
+    "//": "below we set the number of temporary ports to be used for the port-channel 69",
+    "free_temp_opt": 0,
+    "free_temp_copper": 0,
+    "free_temp_te": 48,
+    "portch_OSW_OSW": "1",
+    "portch_OSW_VPE": "112"
+    }
+]

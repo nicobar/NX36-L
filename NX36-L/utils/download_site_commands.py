@@ -1,7 +1,7 @@
 import requests
 import json
 import os
-from get_site_data import get_site_configs, SITES_CONFIG_FOLDER, open_file
+from get_site_data import get_site_configs, exists, SITES_CONFIG_FOLDER, open_file
 
 '''
 cli available
@@ -51,22 +51,33 @@ class Get_Command():
         return (data["data"][0]["rawData"])
 
 
-def run_get_command(site_configs):
+def get_command(site_configs):
     credentials = open_file(os.path.dirname(os.path.realpath(__file__)) + "/pass.json")
 
     for box_config in site_configs:
-        save_command = Get_Command(credentials, box_config)
-        id = save_command.get_deviceID()
-        save_command.set_deviceID(id)
-        command = save_command.get_running_conf()
-
         dest_path = [box_config.base_dir +
                      box_config.site + box_config.switch + "/Stage_1/"]
         dest_path.append(box_config.base_dir +
                          box_config.site + "DATA_SRC/CFG/")
+
+        go_on = 0
         for path in dest_path:
-            save_result(command, path, box_config.switch)
+            if not exists(path + box_config.switch + '.txt'):
+                go_on = 1
+
+        if go_on:
+            print("Config file is about to be downloaded for " + box_config.switch + ".")
+            save_command = Get_Command(credentials, box_config)
+            id = save_command.get_deviceID()
+            save_command.set_deviceID(id)
+            command = save_command.get_running_conf()
+
+            for path in dest_path:
+                save_result(command, path, box_config.switch)
+            print("Config file has been downloaded for " + box_config.switch + ".")
+        else:
+            print("Config file is already in place for " + box_config.switch + ".")
 
 #if __name__ == "__main__":
 #    site_configs = get_site_configs(SITES_CONFIG_FOLDER)
-#    run_get_command(site_configs)
+#    get_command(site_configs)

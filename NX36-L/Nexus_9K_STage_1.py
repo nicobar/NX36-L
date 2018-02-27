@@ -9,7 +9,6 @@ sys.path.insert(0, 'utils')
 
 from get_site_data import get_site_configs, SITES_CONFIG_FOLDER
 
-
 def save_wb(wb, dest_path, file_name):
     import os
     filepath = dest_path + file_name
@@ -452,10 +451,10 @@ def run(site_configs):
 
 
 def prepare_stage(site_configs):
-    from download_site_commands import run_get_command
-    from extract_excel import run_extract_excel
-    run_get_command(site_configs)
-    run_extract_excel(site_configs)
+    from download_site_commands import get_command
+    from extract_excel import get_excel
+    get_command(site_configs)
+    get_excel(site_configs)
 
 
 if __name__ == "__main__":
