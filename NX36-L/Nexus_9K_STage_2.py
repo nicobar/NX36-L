@@ -2,7 +2,7 @@ from openpyxl import load_workbook
 import sys
 sys.path.insert(0, 'utils')
 
-from get_site_data import get_site_configs, SITES_CONFIG_FOLDER
+from get_site_data import get_site_configs, SITES_CONFIG_FOLDER, exists
 
 def enum(**enums):
     return type('Enum', (), enums)
@@ -54,9 +54,9 @@ def populate_nexus_interfaces(site_config, TYPE, INPUT_XLS, SHEET, BOARD_3K):
     #
     # At least one FREE_TEMP_* has to be valorized
     #
-    FREE_TEMP_OPT = 0
-    FREE_TEMP_COPPER = 0
-    FREE_TEMP_TE = 0
+    FREE_TEMP_OPT = site_config.free_temp_opt
+    FREE_TEMP_COPPER = site_config.free_temp_copper
+    FREE_TEMP_TE = site_config.free_temp_te
 
     BOARD_9K = {
         'Type2':
@@ -199,6 +199,9 @@ def move_file(site_config, source_path, dest_path):
 def prepare_stage(site_configs):
     for site_config in site_configs:
         source_path = site_config.base_dir + site_config.site + "/DATA_SRC/XLS/OUTPUT_STAGE_1.5/"
+        if not exists(source_path + site_config.switch + "_checked_v1.0_OUT_DB_OPT.XLSX"):
+            print("Data in the directory " + source_path + " are missing. Please create it.")
+            exit(0)
         dest_path = site_config.base_dir + site_config.site + site_config.switch + "/Stage_2/"
         move_file(site_config, source_path, dest_path)
 
