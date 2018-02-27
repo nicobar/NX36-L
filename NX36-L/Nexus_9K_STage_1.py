@@ -435,18 +435,18 @@ def further_interfaces(site_config, OSW_CFG_TXT, SHEET, OUTPUT_XLS):
 
 
 def run(site_configs):
-    for site_config in site_configs:
+    for box_config in site_configs:
 
-        base_dir = site_config.base_dir + site_config.site + site_config.switch + "/Stage_1/"
-        INPUT_XLS = base_dir + site_config. switch + '_DB_MIGRATION.xlsx'
-        OUTPUT_XLS = base_dir + site_config.switch + '_OUT_DB.xlsx'
-        OSW_CFG_TXT = base_dir + site_config.switch + '.txt'
+        base_dir = box_config.base_dir + box_config.site + box_config.switch + "/Stage_1/"
+        INPUT_XLS = base_dir + box_config. switch + '_DB_MIGRATION.xlsx'
+        OUTPUT_XLS = base_dir + box_config.switch + '_OUT_DB.xlsx'
+        OSW_CFG_TXT = base_dir + box_config.switch + '.txt'
 
-        SHEET = site_config.sheet
+        SHEET = box_config.sheet
 
-        readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, site_config.sheet, OUTPUT_XLS)
-        colour_output_xlsx(site_config.sheet, OUTPUT_XLS)
-        further_interfaces(site_config, OSW_CFG_TXT, site_config.sheet, OUTPUT_XLS)
+        readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, box_config.sheet, OUTPUT_XLS)
+        colour_output_xlsx(box_config.sheet, OUTPUT_XLS)
+        further_interfaces(box_config, OSW_CFG_TXT, box_config.sheet, OUTPUT_XLS)
         create_legendas(OUTPUT_XLS)
         print('End script')
 
@@ -454,7 +454,7 @@ def run(site_configs):
 def prepare_stage(site_configs):
     from download_site_commands import run_get_command
     from extract_excel import run_extract_excel
-    #run_get_command(site_configs)
+    run_get_command(site_configs)
     run_extract_excel(site_configs)
 
 
