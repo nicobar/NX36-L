@@ -199,8 +199,10 @@ def copy_file(site_config, source_path, dest_path):
 def prepare_stage(site_configs):
     for site_config in site_configs:
         source_path = site_config.base_dir + site_config.site + "/DATA_SRC/XLS/OUTPUT_STAGE_1.5/"
-        if not exists(source_path + site_config.switch + "_checked_v1.0_OUT_DB_OPT.XLSX"):
-            print("Data in the directory " + source_path + " are missing. Please create it.")
+        if not exists(source_path + site_config.switch + "_checked_v"
+                      + str(site_config.checked_version) + ".0_OUT_DB_OPT.XLSX"):
+            print("File " + source_path + site_config.switch + "_checked_v"
+                      + str(site_config.checked_version) + ".0_OUT_DB_OPT.XLSX" + " is missing.\nPlease create it.")
             exit(0)
         dest_path = site_config.base_dir + site_config.site + site_config.switch + "/Stage_2/"
         copy_file(site_config, source_path, dest_path)
