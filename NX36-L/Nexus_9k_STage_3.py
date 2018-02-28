@@ -738,8 +738,106 @@ def transform_routes_for_nexus(routes):
 
     return n9k_routes
 
-   def merge_vlan():
-       print()
+def read_partial_conf(file_path):
+    with open(file_path, encoding="utf-8") as file:
+        config = file.read()
+        config = config.split("!")
+
+        vlans = {}
+        interfaces = {}
+        for block in config:
+            import os
+            block = os.linesep.join([s for s in block.splitlines() if s])
+            if block.startswith('vlan'):
+                vlans_id = re.search(r'vlan (\d+)', block).group(1)
+                vlans[int(vlans_id)] = block
+            if block.startswith('interface') :
+                int_id = re.search("interface [A-Za-z]+(\d+)\/(\d+)", block)
+                interfaces[int(int_id.group(1) + int_id.group(2))] = block
+
+        return vlans, interfaces
+
+def read_ce_vlan(file_path):
+    with open(file_path, encoding="utf-8") as file:
+        config = file.read()
+        int_pos = config.find('interface')
+        interface_block = config[int_pos:]
+        config = config.split("!")
+
+        vlans = {}
+        acl_block = '!\n'
+        for block in config:
+            import os
+            block = os.linesep.join([s for s in block.splitlines() if s])
+            if block.startswith('vlan'):
+                vlans_id = re.search(r'vlan (\d+)', block).group(1)
+                vlans[int(vlans_id)] = block
+
+            if block.startswith('ip'):
+                acl_block = acl_block + block + '\n!\n'
+
+        return vlans, acl_block, interface_block
+
+def merge_vce(vlan_vsw, final_dir):
+    import os
+
+    for file in os.listdir(final_dir):
+        # the .json file is the site's cfg file, other files could be reside there as note files
+        if 'VCE' in file:
+             ce_vlans, acls, interfaces = read_ce_vlan(final_dir + file)
+
+             for vlan, block in vlan_vsw.items():
+                if vlan not in ce_vlans:
+                   ce_vlans[vlan] = block
+
+             final_config = ''
+             for key in sorted(ce_vlans):
+                final_config = final_config + ce_vlans[key] + '\n!\n'
+
+             final_config = acls + final_config + interfaces
+             with open((final_dir + file), 'w') as f:
+                 f.write("\n".join([ll.rstrip() for ll in final_config.splitlines() if ll.strip()]))
+                 f.close()
+
+def merge_vsw(final_dir):
+    import os
+
+    vsw = []
+    for file in os.listdir(final_dir):
+        # the .json file is the site's cfg file, other files could be reside there as note files
+        if 'VSW' in file:
+            vsw.append(file)
+
+    sw_vlans = {}
+    sw_interfaces = {}
+
+    i = 0
+    for sw in vsw:
+        sw_vlans[i], sw_interfaces[i] = read_partial_conf(final_dir + sw)
+        i = i + 1
+
+    for vlan, block in sw_vlans[0].items():
+        if vlan not in sw_vlans[1]:
+            sw_vlans[1][vlan] = block
+
+    for int, block in sw_interfaces[0].items():
+        if int not in sw_interfaces[1]:
+            sw_interfaces[1][int] = block
+
+    final_config = ''
+    for key in sorted(sw_vlans[1]):
+        final_config = final_config + sw_vlans[1][key] + '\n!\n'
+
+    for key in sorted(sw_interfaces[1]):
+        final_config = final_config + sw_interfaces[1][key] + '\n!\n'
+
+    for sw in vsw:
+        with open((final_dir + sw), 'w') as f:
+            f.write("\n".join([ll.rstrip() for ll in final_config.splitlines() if ll.strip()]))
+            f.close()
+
+    # all the vlan to merge in VCE files
+    return sw_vlans[1]
 
 #############################################
 ################# CORE ######################
@@ -784,6 +882,7 @@ def prepare_stage(site_configs):
 
 
 def run(site_configs):
+    dest_path = ""
     for site_config in site_configs:
         base_dir = site_config.base_dir + site_config.site + site_config.switch + "/Stage_3/"
 
@@ -810,8 +909,12 @@ def run(site_configs):
         #############################################
         ################### MAIN ####################
         #############################################
-        acl = ['!', 'ip access-list MGW_OM', ' 10 permit ' + site_config.acl + "/27" +
-                                             ' ! VLAN190 PAMGW02_[O&M_LAN]', ' 1000 deny ip any any', '!']
+
+        acl = ['!', 'ip access-list MGW_OM', ' 10 permit ']
+        for line in site_config.acl:
+            acl.append(' ' + line)
+        acl.append(' 1000 deny ip any any')
+        acl.append('!')
         ############## ROUTES ###############
 
         routes = get_cleaned_routes(OSW_CFG_TXT)
@@ -870,7 +973,6 @@ def run(site_configs):
         if not VLAN_FROM_XLS:
             vlan_on_N9508 = list(set(candidate_vlan_xls_N9508) | (set(candidate_vlan_xls_N3048)))
             vlan_on_N9508.sort(key=natural_keys)
-
         else:
             vlan_on_N9508 = candidate_vlan_xls_N9508
 
@@ -926,13 +1028,13 @@ def run(site_configs):
         parse_out_N3048 = c.CiscoConfParse(cfg_N3048)
         parse_out_N3048.save_as(OSWVSW_CFG_TXT)
 
-
-        merge_vlan()
-
         dest_path = site_config.base_dir + site_config.site + "/FINAL/"
         copy_file(OSWVSW_CFG_TXT, dest_path + SWITCH + 'VSW' + '.txt', dest_path)
         copy_file(OSWVCE_CFG_TXT, dest_path + SWITCH + 'VCE' + '.txt', dest_path)
         print("done write")
+
+    vlans = merge_vsw(dest_path)
+    merge_vce(vlans, dest_path)
 
 if __name__ == "__main__":
     site_configs = get_site_configs(SITES_CONFIG_FOLDER)
