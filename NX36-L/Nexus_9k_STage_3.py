@@ -139,7 +139,7 @@ def get_vlan_from_cfg(OSW_CFG_TXT):
     return [obj.text.split(' ')[1] for obj in vlan_obj_list]
 
 
-def get_vlan_from_xls(INPUT_XLS,SHEET):
+def get_vlan_from_xls(INPUT_XLS, SHEET):
     ''' from xls get list of all L2 vlan  '''
 
     wb_r = load_workbook(INPUT_XLS)
@@ -738,6 +738,8 @@ def transform_routes_for_nexus(routes):
 
     return n9k_routes
 
+   def merge_vlan():
+       print()
 
 #############################################
 ################# CORE ######################
@@ -923,6 +925,13 @@ def run(site_configs):
         cfg_N3048 = cfg_vlan_N3048 + cfg_intf_N3048
         parse_out_N3048 = c.CiscoConfParse(cfg_N3048)
         parse_out_N3048.save_as(OSWVSW_CFG_TXT)
+
+
+        merge_vlan()
+
+        dest_path = site_config.base_dir + site_config.site + "/FINAL/"
+        copy_file(OSWVSW_CFG_TXT, dest_path + SWITCH + 'VSW' + '.txt', dest_path)
+        copy_file(OSWVCE_CFG_TXT, dest_path + SWITCH + 'VCE' + '.txt', dest_path)
         print("done write")
 
 if __name__ == "__main__":
