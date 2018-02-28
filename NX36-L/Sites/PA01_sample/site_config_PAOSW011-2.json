@@ -11,7 +11,9 @@
     "free_temp_copper": 0,
     "free_temp_te": 0,
     "portch_OSW_OSW": "1",
-    "portch_OSW_VPE": "111"
+    "portch_OSW_VPE": "111",
+    "stage_1.5_checked_version": 1,
+    "acl": "X.X.X.X"
     },
     {
     "switch": "PAOSW012",
@@ -25,6 +27,8 @@
     "free_temp_copper": 0,
     "free_temp_te": 48,
     "portch_OSW_OSW": "1",
-    "portch_OSW_VPE": "112"
+    "portch_OSW_VPE": "112",
+    "stage_1.5_checked_version": 1,
+    "acl": "X.X.X.X"
     }
 ]
