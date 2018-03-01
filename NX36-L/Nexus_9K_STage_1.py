@@ -4,23 +4,21 @@ from openpyxl.styles import PatternFill
 import ciscoconfparse as c
 import re
 
+import sys
+sys.path.insert(0, 'utils')
+
+from get_site_data import get_site_configs, SITES_CONFIG_FOLDER
+
+def save_wb(wb, dest_path, file_name):
+    import os
+    filepath = dest_path + file_name
+    if not os.path.exists(dest_path):
+        os.makedirs(dest_path)
+    wb.save(filepath)
 
 #############################################
 ################# VARIABLES #################
 #############################################
-
-SWITCH = 'MIOSW057'
-#INFRA_CH_GRP_LIST = [1,133]
-SHEET = SWITCH
-BASE = '/mnt/hgfs/VM_shared/VF-2017/NMP/'
-SITE = 'MI05/'
-BASE_DIR = BASE + SITE + SWITCH + '/Stage_1/'
-
-
-INPUT_XLS = BASE_DIR + SWITCH + '_DB_MIGRATION.xlsx'
-OUTPUT_XLS = BASE_DIR + SWITCH + '_OUT_DB.xlsx'
-OSW_CFG_TXT = BASE_DIR + SWITCH + '.txt'
-
 
 # +-----0-A------+-----1-B------+------2-C------+---3-D--+---4-E-+-----5-F----+-------6-G---+-------7-H---------+-------8-I-----+-------9-J-----+-------10-K-----+----11-L----+-----12-M-------+---13-N----------+---14-O----------+---15-P----------+
 # +--SRC_OSW_IF--+--DST_VCE_IF--+--Access-Type--+--VLAN--+--QoS--+--Nexus_AP--+--Member/PO--+-----Descr---------+----Duplex-----+-----Speed-----+---Media Type---+---Action---+---Root-Guard---+---System-type---+---Check_Descr---+----Temp---------+
@@ -28,9 +26,9 @@ OSW_CFG_TXT = BASE_DIR + SWITCH + '.txt'
 #                                   |
 #                                   +-- Access, trunk, infra,
 
+
 def atoi(text):
     ''' from string to int'''
-
     return int(text) if text.isdigit() else text
 
 
@@ -40,7 +38,6 @@ def natural_keys(text):
     http://nedbatchelder.com/blog/200712/human_sorting.html
     (See Toothy's implementation in the comments)
     '''
-
     return [atoi(c) for c in re.split('(\d+)', text)]
 
 
@@ -64,7 +61,7 @@ def get_string_from_range_to_list(range_str):
 
 def get_allowed_vlan_list(if_cfg, SEL):
     ''' Get interface configuration block as a list
-        and returns a list (SEL = 'LIST') or string (SEL = "STRING")  
+        and returns a list (SEL = 'LIST') or string (SEL = "STRING")
         of trunk allowed VLANS '''
 
     s = ''
@@ -138,15 +135,15 @@ def get_channel_group(if_cfg):
     return ch_gr
 
 
-def create_legendas():
+def create_legendas(OUTPUT_XLS):
     wb = load_workbook(OUTPUT_XLS)
-    create_qos_legendas(wb)
-    create_color_legendas(wb)
-    create_check_legendas(wb)
-    create_ap_legendas(wb)
+    create_qos_legendas(wb, OUTPUT_XLS)
+    create_color_legendas(wb, OUTPUT_XLS)
+    create_check_legendas(wb, OUTPUT_XLS)
+    create_ap_legendas(wb, OUTPUT_XLS)
 
 
-def create_qos_legendas(my_wb):
+def create_qos_legendas(my_wb, OUTPUT_XLS):
     QOS_SHEET = 'QoS Legenda'
     ws = my_wb.create_sheet(index=1, title=QOS_SHEET)
 
@@ -160,7 +157,7 @@ def create_qos_legendas(my_wb):
     my_wb.save(filename=OUTPUT_XLS)
 
 
-def create_color_legendas(my_wb):
+def create_color_legendas(my_wb, OUTPUT_XLS):
     COLOR_SHEET = 'Color Legenda'
     ws = my_wb.create_sheet(index=2, title=COLOR_SHEET)
 
@@ -191,7 +188,7 @@ def create_color_legendas(my_wb):
     my_wb.save(filename=OUTPUT_XLS)
 
 
-def create_check_legendas(my_wb):
+def create_check_legendas(my_wb, OUTPUT_XLS):
     CHECK_SHEET = 'Check Legenda'
     ws = my_wb.create_sheet(index=3, title=CHECK_SHEET)
 
@@ -203,7 +200,7 @@ def create_check_legendas(my_wb):
     my_wb.save(filename=OUTPUT_XLS)
 
 
-def create_ap_legendas(my_wb):
+def create_ap_legendas(my_wb, OUTPUT_XLS):
     AP_SHEET = 'Access Point Legenda'
     ws = my_wb.create_sheet(index=1, title=AP_SHEET)
 
@@ -225,11 +222,11 @@ def create_ap_legendas(my_wb):
     my_wb.save(filename=OUTPUT_XLS)
 
 
-def colour_output_xlsx():
+def colour_output_xlsx(SHEET, OUTPUT_XLS):
     '''Get OUTPUT_XLS and  colors lines to help people on check interfaces '''
 
     wb = load_workbook(OUTPUT_XLS)
-    ws = wb.get_sheet_by_name(SHEET)
+    ws = wb[SHEET]
 
     MAX_COL = ws.max_column - 1
     MAX_COLUMN_COLOR = MAX_COL
@@ -276,7 +273,7 @@ def get_descr(if_cfg):
     return desc_from_cfg
 
 
-def readin_xls_writeout_xls():
+def readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, SHEET, OUTPUT_XLS):
 
     header_out = ['SRC OSW IF', 'DST VCE IF', 'Access Type', 'VLAN', 'QoS', 'Nexus AP', 'Member/PO',
                   'Descr', 'Duplex', 'Speed', 'Media Type', 'Action', 'Root-Guard', 'System Type', 'Check Descr']
@@ -287,7 +284,7 @@ def readin_xls_writeout_xls():
     wb_r = load_workbook(INPUT_XLS)
     wb_w = Workbook()
 
-    ws_r = wb_r.get_sheet_by_name(SHEET)
+    ws_r = wb_r[SHEET]
     ws_w = wb_w.create_sheet(index=0, title=SHEET)
 
     MAX_COL = 15
@@ -387,7 +384,7 @@ def readin_xls_writeout_xls():
     print("End F1")
 
 
-def further_interfaces():
+def further_interfaces(site_config, OSW_CFG_TXT, SHEET, OUTPUT_XLS):
     parse = c.CiscoConfParse(OSW_CFG_TXT)
 
     intf_obj_list = parse.find_objects(r'^interface .*Ethernet|^interface Port-channel.*')
@@ -413,6 +410,7 @@ def further_interfaces():
         cfg_less_xls_list.sort(key=natural_keys)
 
         ws.cell(row=START_ROW, column=1).value = "Le seguenti interfaccie sono utilizzate nella cfg ma non compaiono nell' xlsx"
+
         for elem, line in zip(cfg_less_xls_list, range(START_ROW + 1, START_ROW + 1 + len(cfg_less_xls_list))):
             ws.cell(row=line, column=1).value = elem
     elif (len_if_list_cfg - len_if_list_xls) == 0:
@@ -422,14 +420,43 @@ def further_interfaces():
         xls_less_cfg_list = list(if_set_xls - if_set_cfg)
         xls_less_cfg_list.sort(key=natural_keys)
         ws.cell(row=START_ROW, column=1).value = "Le seguenti interfaccie sono presenti nell XLSX ma non nella cfg--> VERIFICARE"
+
+        for col in range(1, 16):
+            ws.cell(row=START_ROW, column=col).fill = PatternFill(start_color='CCCCCC', end_color='CCCCCC',
+                                                                  fill_type='solid')
+
         for elem, line in zip(xls_less_cfg_list, range(START_ROW + 1, START_ROW + 1 + len(xls_less_cfg_list))):
             ws.cell(row=line, column=1).value = elem
 
-    wb.save(filename=OUTPUT_XLS)
+    wb.save(OUTPUT_XLS)
+    dest_path = site_config.base_dir + site_config.site + "/DATA_SRC/XLS/OUTPUT_STAGE_1/"
+    save_wb(wb, dest_path, site_config.switch + '_OUT_DB.xlsx')
+
+def run(site_configs):
+    for box_config in site_configs:
+
+        base_dir = box_config.base_dir + box_config.site + box_config.switch + "/Stage_1/"
+        INPUT_XLS = base_dir + box_config. switch + '_DB_MIGRATION.xlsx'
+        OUTPUT_XLS = base_dir + box_config.switch + '_OUT_DB.xlsx'
+        OSW_CFG_TXT = base_dir + box_config.switch + '.txt'
+
+        SHEET = box_config.sheet
+
+        readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, box_config.sheet, OUTPUT_XLS)
+        colour_output_xlsx(box_config.sheet, OUTPUT_XLS)
+        further_interfaces(box_config, OSW_CFG_TXT, box_config.sheet, OUTPUT_XLS)
+        create_legendas(OUTPUT_XLS)
+        print('End script')
 
 
-readin_xls_writeout_xls()
-colour_output_xlsx()
-further_interfaces()
-create_legendas()
-print('End script')
+def prepare_stage(site_configs):
+    from download_site_commands import get_command
+    from extract_excel import get_excel
+    get_command(site_configs)
+    get_excel(site_configs)
+
+
+if __name__ == "__main__":
+    site_configs = get_site_configs(SITES_CONFIG_FOLDER)
+    prepare_stage(site_configs)
+    run(site_configs)
