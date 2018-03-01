@@ -13,7 +13,7 @@
     "portch_OSW_OSW": "1",
     "portch_OSW_VPE": "111",
     "stage_1.5_checked_version": 1,
-    "acl": "X.X.X.X"
+    "acl": ["X.X.X.X/XX","Y.Y.Y.Y/YY"]
     },
     {
     "switch": "PAOSW012",
@@ -29,6 +29,6 @@
     "portch_OSW_OSW": "1",
     "portch_OSW_VPE": "112",
     "stage_1.5_checked_version": 1,
-    "acl": "X.X.X.X"
+    "acl": ["X.X.X.X/XX","Y.Y.Y.Y/YY"]
     }
 ]
