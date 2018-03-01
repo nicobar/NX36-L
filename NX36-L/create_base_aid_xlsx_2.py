@@ -6,6 +6,12 @@
 import ciscoconfparse as c
 from openpyxl.workbook import Workbook
 
+import sys
+sys.path.insert(0, 'utils')
+
+from get_site_data import get_site_configs, SITES_CONFIG_FOLDER
+
+
 #############################################
 ################# Functions #################
 #############################################
@@ -512,14 +518,76 @@ VCE_FILE_LIST = [AID_PATH + NEXUS_FILE_DICT[OSW_LIST[0]][0],
 ################# MAIN #####################
 ############################################
 
-wb = Workbook()
-manage_interface_description(wb, OSW_LIST)
-manage_standby_brief(wb, OSW_LIST)
-manage_vrrp_brief(wb, OSW_LIST)
-manage_interface_trunk(wb, OSW_LIST)
-manage_vlan_brief(wb, OSW_LIST)
-manage_nexus_vlan_db(wb, NEXUS_FILE_DICT)
-manage_dot1q(wb, VCE2VPE_PO, NEXUS_FILE_DICT, VPE_LIST, TRUNK_MAP)
-manage_rb(wb, OSW_LIST)
-manage_static_routes(wb, VCE_FILE_LIST)
-wb.save(filename=OUTPUT_XLS)
+
+def run(site_configs):
+    #     for box_config in site_configs:
+    #
+    #         base_dir = box_config.base_dir + box_config.site + box_config.switch + "/Stage_1/"
+    #         INPUT_XLS = base_dir + box_config. switch + '_DB_MIGRATION.xlsx'
+    #         OUTPUT_XLS = base_dir + box_config.switch + '_OUT_DB.xlsx'
+    #         OSW_CFG_TXT = base_dir + box_config.switch + '.txt'
+    #
+    #         SHEET = box_config.sheet
+    #
+    #         readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, box_config.sheet, OUTPUT_XLS)
+    #         colour_output_xlsx(box_config.sheet, OUTPUT_XLS)
+    #         further_interfaces(box_config, OSW_CFG_TXT, box_config.sheet, OUTPUT_XLS)
+    #         create_legendas(OUTPUT_XLS)
+    #         print('End script')
+    box.config  = site_configs[0]
+    OSW_LIST = [box_config.
+    VPE_LIST = ['PAVPE013',
+                'PAVPE014']
+    OSW2OSW_PO = 'Port-channel1'
+    VCE2VPE_PO = 'Port-channel411'
+    # trunk_map = {vpe_node: [trunk1, trunk2, ]} where trunks are VPE to OSW trunks by VPE side
+    TRUNK_MAP = {VPE_LIST[0]: ['Bundle-Ether111', 'GigabitEthernet0/2/1/1', 'GigabitEthernet0/2/1/2', 'GigabitEthernet0/7/1/1'],
+                 VPE_LIST[1]: ['Bundle-Ether112', 'GigabitEthernet0/2/1/1', 'GigabitEthernet0/2/1/2', 'GigabitEthernet0/7/1/1']}
+    BASE = '/mnt/hgfs/VM_shared/VF-2017/NMP/'
+    SITE = 'PA01/'
+    AID_PATH = BASE + SITE + 'AID/'
+    CMD_PATH = BASE + SITE + 'DATA_SRC/CMD/'
+    
+    OUTPUT_XLS = AID_PATH + 'AID_to_{}_NMP.xlsx'.format(SITE[:-1])
+    
+    
+    NEXUS_FILE_DICT = {OSW_LIST[0]: [OSW_LIST[0] + 'VCE.txt',
+                                     OSW_LIST[0] + 'VCE_addendum.txt',
+                                     OSW_LIST[0] + 'VSW.txt',
+                                     VPE_LIST[0] + 'VPE_addendum.txt'],
+                       OSW_LIST[1]: [OSW_LIST[1] + 'VCE.txt',
+                                     OSW_LIST[1] + 'VCE_addendum.txt',
+                                     OSW_LIST[1] + 'VSW.txt',
+                                     VPE_LIST[1] + 'VPE_addendum.txt']}
+    
+    VPE_FILE_LIST = [AID_PATH + VPE_LIST[0] + '.txt',
+                     AID_PATH + VPE_LIST[1] + '.txt']
+    
+    VCE_FILE_LIST = [AID_PATH + NEXUS_FILE_DICT[OSW_LIST[0]][0],
+                     AID_PATH + NEXUS_FILE_DICT[OSW_LIST[1]][0]]
+
+    
+    wb = Workbook()
+    manage_interface_description(wb, OSW_LIST)
+    manage_standby_brief(wb, OSW_LIST)
+    manage_vrrp_brief(wb, OSW_LIST)
+    manage_interface_trunk(wb, OSW_LIST)
+    manage_vlan_brief(wb, OSW_LIST)
+    manage_nexus_vlan_db(wb, NEXUS_FILE_DICT)
+    manage_dot1q(wb, VCE2VPE_PO, NEXUS_FILE_DICT, VPE_LIST, TRUNK_MAP)
+    manage_rb(wb, OSW_LIST)
+    manage_static_routes(wb, VCE_FILE_LIST)
+    wb.save(filename=OUTPUT_XLS)
+
+
+def prepare_stage(site_configs):
+    from download_site_commands import get_command
+    from extract_excel import get_excel
+    get_command(site_configs)
+    get_excel(site_configs)
+
+
+if __name__ == "__main__":
+    site_configs = get_site_configs(SITES_CONFIG_FOLDER)
+    prepare_stage(site_configs)
+    run(site_configs)
