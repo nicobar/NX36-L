@@ -59,7 +59,9 @@ class SiteConfig():
         self.conf_dest_path = [self.base_dir +
                                self.site + self.switch + "/Stage_1/",
                                self.base_dir + self.site + "DATA_SRC/CFG/"]
-
+        self.osw_list = [self.switch, self.other_switch]
+        self.vpe_list = [self.switch, self.other_switch]
+, 
 #if __name__ == "__main__":
 #    x = get_site_configs(SITES_CONFIG_FOLDER)
 #    for i in x:
