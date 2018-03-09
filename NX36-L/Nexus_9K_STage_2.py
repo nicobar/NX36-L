@@ -191,7 +191,7 @@ def create_dir(dest_path):
 
 def copy_file(site_config, source_path, dest_path):
     import shutil
-    src_file = source_path + site_config.switch + "_checked_v1.0_OUT_DB_OPT.XLSX"
+    src_file = source_path + site_config.switch + "_checked_v" + str(site_config.checked_version) + ".0_OUT_DB_OPT.XLSX"
     dst_file = dest_path + site_config.switch + "_OUT_DB_OPT.XLSX"
     create_dir(dest_path)
     shutil.copy(src_file, dst_file)
