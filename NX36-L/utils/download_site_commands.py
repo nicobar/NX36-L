@@ -109,7 +109,8 @@ def check_cfg(box_config):
             exit(0)
         output_command = output_command.replace('4093', '4000')
         #check vlan similar to 4093 and print them in a file
-        check_vlan(output_command)
+        check_vlan(output_command, box_config)
+
         for box in box_config.conf_dest_path:
             save_result(output_command, box, box_config.switch)
 
@@ -145,8 +146,8 @@ def check_cfg(box_config):
                   box_config.vpe_router + '.txt' + ".")
         #we need to copy this in Stage4 folder
 
-#prints vlan similar to 4093 which has become 4000
-def check_vlan(output_command):
+#prints vlan similar higher than 4000 which has to have spanning tree
+def check_vlan(output_command, box_config):
         vlans_with_spanning_tree = []
         config = output_command.split("!")
         for block in config:
@@ -158,7 +159,12 @@ def check_vlan(output_command):
                     if 'standby' in block:
                         vlans_id = re.search(r'interface Vlan(4\d{3})', block).group(1)
                         vlans_with_spanning_tree.append(vlans_id)
-        print(vlans_with_spanning_tree)
+
+        base_dir = box_config.base_dir + box_config.site
+        if not os.path.exists(base_dir + "DATA_SRC/CMD/"):
+            os.makedirs(base_dir + "DATA_SRC/CMD/")
+        with open(base_dir + "DATA_SRC/CMD/" +  box_config.switch + "_vlan_with_spanning_tree.txt", 'w') as f:
+            json.dump(vlans_with_spanning_tree, f)
 
 def get_config(site_configs):
     import shutil
