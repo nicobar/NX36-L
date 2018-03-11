@@ -66,7 +66,7 @@ class SiteConfig():
         self.vpe_router = site_config["vpe_router"]
         self.vsw_switch = site_config["vsw_switch"]
         self.be2po_map_voice_trunks = site_config["be2po_map_voice_trunks"]
-
+        self.vpeosw_to_vpevce = site_config["vpeosw_to_vpevce"]
 #if __name__ == "__main__":
 #    x = get_site_configs(SITES_CONFIG_FOLDER)
 #    for i in x:
