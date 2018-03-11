@@ -32,6 +32,7 @@ def create_if_subif_map(VPE_CFG_TXT, be2po_map):
     for int_obj in int_obj_list:
         sub_list = int_obj.text.split('.')
         if sub_list[0] in be2po_map:
+            print(sub_list[0])
             if len(sub_list) == 2:
                 mymap.setdefault(sub_list[0], list()).append(sub_list[1])
             elif len(sub_list) == 1:

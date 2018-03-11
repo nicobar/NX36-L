@@ -21,10 +21,14 @@
     "vpe_router": "PAVPE013",
     "vsw_switch": "PAVSW01101",
     "/3a": "this reports all voice/signalling trunks ASR:OSW",
-    "be2po_map_voice_trunks" : {"interface GigabitEthernet0/2/1/1": "interface GigabitEthernet4/6",
-                                "interface GigabitEthernet0/7/1/1": "interface GigabitEthernet4/7", 
-                                "interface GigabitEthernet0/2/1/2": "interface GigabitEthernet4/8"  
-                               }
+    "be2po_map_voice_trunks": {"interface GigabitEthernet0/2/1/1": "interface GigabitEthernet4/6",
+                               "interface GigabitEthernet0/7/1/1": "interface GigabitEthernet4/7",
+                               "interface GigabitEthernet0/2/1/2": "interface GigabitEthernet4/8"
+                              },
+    "vpeosw_to_vpevce":{"GigabitEthernet0/7/1/1": "Bundle-Ether411",
+                        "GigabitEthernet0/2/1/2": "Bundle-Ether411",
+                        "GigabitEthernet0/2/1/1": "Bundle-Ether411"
+                       }
     },
     {
     "switch": "PAOSW012",
@@ -48,9 +52,13 @@
     "vpe_router": "PAVPE014",
     "vsw_switch": "PAVSW01101",
     "/3a": "this reports all voice/signalling trunks ASR:OSW",
-    "be2po_map_voice_trunks" : {"interface GigabitEthernet0/2/1/1": "interface GigabitEthernet4/6", 
-                                "interface GigabitEthernet0/7/1/1": "interface GigabitEthernet4/7",
-                                "interface GigabitEthernet0/2/1/2": "interface GigabitEthernet4/8"
-                               }
+    "be2po_map_voice_trunks": {"interface GigabitEthernet0/2/1/1": "interface GigabitEthernet4/6",
+                               "interface GigabitEthernet0/7/1/1": "interface GigabitEthernet4/7",
+                               "interface GigabitEthernet0/2/1/2": "interface GigabitEthernet4/8"
+                              },
+    "vpeosw_to_vpevce":{"GigabitEthernet0/7/1/1": "Bundle-Ether411",
+                        "GigabitEthernet0/2/1/2": "Bundle-Ether411",
+                        "GigabitEthernet0/2/1/1": "Bundle-Ether411"
+                       }
     }
 ]
