@@ -344,7 +344,7 @@ def write_cfg(conf_list, VCE_CFG_TXT_OUT):
     f.close()
 
 
-def prepare_stage_vce(site_configs):
+def copy_folder(site_configs):
 
     for site_config in site_configs:
         #copying site config
@@ -519,11 +519,7 @@ def run(site_configs):
         print('Script Ends')
 
 
-def prepare_stage(site_configs):
-    prepare_stage_vce(site_configs)
-
-
 if __name__ == "__main__":
     site_configs = get_site_configs(SITES_CONFIG_FOLDER)
-    prepare_stage(site_configs)
+    copy_folder(site_configs)
     run(site_configs)

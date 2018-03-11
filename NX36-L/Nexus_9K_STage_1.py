@@ -448,15 +448,6 @@ def run(site_configs):
         create_legendas(OUTPUT_XLS)
         print('End script')
 
-
-def prepare_stage(site_configs):
-    from download_site_commands import get_command
-    from extract_excel import get_excel
-    get_command(site_configs)
-    get_excel(site_configs)
-
-
 if __name__ == "__main__":
     site_configs = get_site_configs(SITES_CONFIG_FOLDER)
-    prepare_stage(site_configs)
     run(site_configs)
