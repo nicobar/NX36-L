@@ -856,7 +856,7 @@ def copy_file(source_file, dest_file, dest_path):
     create_dir(dest_path)
     shutil.copy(source_file, dest_file)
 
-def prepare_stage(site_configs):
+def copy_folder(site_configs):
     for site_config in site_configs:
         #copying site config
         source_path = site_config.base_dir + site_config.site + "/DATA_SRC/CFG/"
@@ -1038,5 +1038,5 @@ def run(site_configs):
 
 if __name__ == "__main__":
     site_configs = get_site_configs(SITES_CONFIG_FOLDER)
-    prepare_stage(site_configs)
+    copy_folder(site_configs)
     run(site_configs)

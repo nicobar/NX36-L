@@ -1,7 +1,10 @@
 import ciscoconfparse as c
-# import time
 
-def create_if_subif_map():
+import sys
+sys.path.insert(0, 'utils')
+from get_site_data import get_site_configs, SITES_CONFIG_FOLDER, exists
+
+def create_if_subif_map(VPE_CFG_TXT, be2po_map):
     ''' from VPE.cfg returns {interface: dot1q_tags} '''
    
     mymap = {}
@@ -18,7 +21,7 @@ def create_if_subif_map():
                 continue
     return mymap
 
-def get_vlan_to_be_migrated():
+def get_vlan_to_be_migrated(VCE_CFG_TXT_IN):
     
     vlan_list = []
     parse1 = c.CiscoConfParse(VCE_CFG_TXT_IN)
@@ -30,7 +33,7 @@ def get_vlan_to_be_migrated():
     return vlan_list
 
 
-def create_migartion_map(if_subif_m):
+def create_migartion_map(if_subif_m, VPE_CFG_TXT, be2po_map, NEW_BE):
     ''' from VPE.cfg returns {interface_old.tag: interface_new.tag} '''
     
     mig_map = {}
@@ -58,12 +61,12 @@ def create_migartion_map(if_subif_m):
                     mig_map[ifs_src] = ifs_dst
     return mig_map    
 
-def create_if_cfg_list(mig_map):
+def create_if_cfg_list(mig_map, VPE_CFG_TXT, VCE_CFG_TXT_IN):
     ''' creates subif dest interfaces configuration '''
     out_cfg_list = []
     
    
-    vlan_tbm = get_vlan_to_be_migrated()
+    vlan_tbm = get_vlan_to_be_migrated(VCE_CFG_TXT_IN)
 #    vlan_tbm.append('801')
 #    vlan_tbm.append('802')
 
@@ -92,13 +95,13 @@ def create_if_cfg_list(mig_map):
             continue
     return out_cfg_list
 
-def get_router_static( vpeosw_2_vpevce_map):
+def get_router_static(vpeosw_2_vpevce_map, VPE_CFG_TXT, VCE_CFG_TXT_IN):
     
     search_str_h =''
     parse = c.CiscoConfParse(VPE_CFG_TXT)
     router_static_conf = []
     
-    vlan_tbm = get_vlan_to_be_migrated()
+    vlan_tbm = get_vlan_to_be_migrated(VCE_CFG_TXT_IN)
      
     router_static_cfg_orig = parse.find_all_children('^router static')
     newparse = c.CiscoConfParse(router_static_cfg_orig)
@@ -131,12 +134,12 @@ def get_router_static( vpeosw_2_vpevce_map):
     conf = ['!'] +  newparse2.ioscfg
     return conf
 
-def get_router_hsrp( vpeosw_2_vpevce_map):
+def get_router_hsrp(vpeosw_2_vpevce_map, VPE_CFG_TXT, be2po_map, VCE_CFG_TXT_IN):
     
     parse = c.CiscoConfParse(VPE_CFG_TXT)
     testo = ['!','router hsrp']
     
-    vlan_tbm = get_vlan_to_be_migrated()
+    vlan_tbm = get_vlan_to_be_migrated(VCE_CFG_TXT_IN)
     
     #testo_temp1 = parse.find_blocks(r'^' + OLD_BE + '.+')
     #parse3 = c.CiscoConfParse(testo_temp1)
@@ -173,7 +176,7 @@ def get_router_hsrp( vpeosw_2_vpevce_map):
     
     return testo
 
-def get_vrrp_vlan_map():
+def get_vrrp_vlan_map(OSW_CFG_TXT):
     "return {vlan_tag:'VRRP_VIP'}"
     #vce1_cfg = PATH + OSW +'.txt'
     vrrp_map = {}
@@ -190,9 +193,9 @@ def get_vrrp_vlan_map():
                     vrrp_map[vlan_tag] = line.split()[3]
     return vrrp_map   
 
-def add_vrrpvip_to_hsrp_cfg(cfg):
+def add_vrrpvip_to_hsrp_cfg(cfg, OSW_CFG_TXT):
     
-    vrrp_vlan_map = get_vrrp_vlan_map() 
+    vrrp_vlan_map = get_vrrp_vlan_map(OSW_CFG_TXT)
     #vlan_tbm = get_vlan_to_be_migrated()
     
     parse = c.CiscoConfParse(cfg)
@@ -214,74 +217,120 @@ def add_vrrpvip_to_hsrp_cfg(cfg):
     print (testo)
     return testo
 
-def write_cfg(conf_list):
+def write_cfg(conf_list, VPE_CFG_TXT_OUT):
     
     f = open(VPE_CFG_TXT_OUT,'w+')
     for line in conf_list:
         f.write(line + '\n')
     f.close()       
 
-#################### CONSTATNT ##################
-
-new_po = 'interface Port-channel411'
-
-# be2po_map OR BETTER vpe_to_osw_if_mapping reports all trunk interfaces (main BE/PO and voice/sig trunks)
-
-be2po_map = {'interface Bundle-Ether111': 'interface Port-channel111',               # This is BE <--> PO mapping
-             'interface GigabitEthernet0/2/1/1': 'interface GigabitEthernet4/6',  # This is VOICE/SIG TRUNK mapping
-             'interface GigabitEthernet0/7/1/1': 'interface GigabitEthernet4/7',  # This is VOICE/SIG TRUNK mapping
-             'interface GigabitEthernet0/2/1/2': 'interface GigabitEthernet4/8',  # This is VOICE/SIG TRUNK mapping
-             }
-
-# vpeosw_to_vpevce maps all old trunks with new one
-# questi sono
-vpeosw_to_vpevce_map = { 'Bundle-Ether111': 'Bundle-Ether411',
-                         'GigabitEthernet0/7/1/1' : 'Bundle-Ether411',
-                         'GigabitEthernet0/2/1/2' : 'Bundle-Ether411',
-                         'GigabitEthernet0/2/1/1' : 'Bundle-Ether411',
-                         # below no port-channel interfaces
-                        }
-
-NEW_BE = 'interface Bundle-Ether411'
-
-OLD_BE = 'interface Bundle-Ether111'
-
-PO_OSW_MATE = 'Port-channel1'
-
-OSW_SWITCH =    'PAOSW011'
-VSW_SWITCH =    'PAVSW01101'
-VPE_ROUTER =    'PAVPE013'
-VCE_SWITCH =    'PAVCE011'
-
-BASE = '../../../'
-SITE = 'PA01/'
-BASE_DIR = BASE + SITE + OSW_SWITCH + '/Stage_4/VPE/'
-
-#INPUT_XLS = BASE_DIR + OSW_SWITCH + '_OUT_DB_OPT.xlsx'
-
-VPE_CFG_TXT = BASE_DIR + VPE_ROUTER + '.txt'
-
-OSW_CFG_TXT = BASE_DIR + OSW_SWITCH + '.txt'
-#VSW_CFG_TXT_IN = BASE_DIR + OSW_SWITCH + 'VSW.txt'
-#VCE_CFG_TXT_OUT = BASE_DIR + OSW_SWITCH + 'VCE_addendum.txt'
-VCE_CFG_TXT_IN = BASE_DIR + OSW_SWITCH + 'VCE.txt'
-VPE_CFG_TXT_OUT = BASE_DIR + OSW_SWITCH + 'VPE_addendum.txt'
 
 
-############## MAIN ###########
+##################################################
 
 
-print ('Script Starts')
+def copy_folder(site_configs):
 
-if_subif_map = create_if_subif_map()
-migration_map = create_migartion_map(if_subif_map)
-if_cfg_list = create_if_cfg_list(migration_map)
-router_static_cfg = get_router_static(vpeosw_to_vpevce_map)
-# 
-router_hsrp_cfg = get_router_hsrp(vpeosw_to_vpevce_map)
-router_hsrp_vrrp_cfg = add_vrrpvip_to_hsrp_cfg(router_hsrp_cfg)
-# 
-conf_to_wite = if_cfg_list + router_static_cfg + router_hsrp_vrrp_cfg
-write_cfg(conf_to_wite)
+    for site_config in site_configs:
+        #copying site config
+        source_path = site_config.base_dir + site_config.site + "DATA_SRC/CFG/"
+        source_file_osw = source_path + site_config.switch + ".txt"
+        source_file_vpe = source_path + site_config.vpe_router + ".txt"
+        dest_path = site_config.base_dir + site_config.site + site_config.switch + "/Stage_4/VPE/"
+        dest_file_osw = dest_path + site_config.switch + ".txt"
+        dest_file_vpe = dest_path + site_config.vpe_router + ".txt"
+        for dest_file, source_file in zip([dest_file_osw, dest_file_vpe], [source_file_osw, source_file_vpe]):
+            if exists(dest_file):
+                print(dest_file + " already exists.")
+            else:
+                print("Copying " + dest_file)
+                copy_file(source_file, dest_file, dest_path)
 
-print ('Script Ends')
+        #copying xls config
+        source_path = site_config.base_dir + site_config.site + "FINAL/"
+        source_file_vce = source_path + site_config.switch + "VCE.txt"
+        source_file_vsw = source_path + site_config.switch + "VSW.txt"
+        dest_path = site_config.base_dir + site_config.site + site_config.switch + "/Stage_4/VPE/"
+        dest_file_vce = dest_path + site_config.switch + "VCE.txt"
+        dest_file_vsw = dest_path + site_config.switch + "VSW.txt"
+        for dest_file, source_file in zip([dest_file_vce, dest_file_vsw], [source_file_vce, source_file_vsw]):
+            if exists(dest_file):
+                print(dest_path + " already exists.")
+            else:
+                print("Copying " + dest_file)
+                copy_file(source_file, dest_file, dest_path)
+
+
+def create_dir(dest_path):
+    import os
+    if not os.path.exists(dest_path):
+        os.makedirs(dest_path)
+
+def copy_file(source_file, dest_file, dest_path):
+    import shutil
+    if not exists(source_file):
+        print("File " + source_file + ".txt is missing. \nPlease create it.")
+        exit(0)
+    create_dir(dest_path)
+    shutil.copy(source_file, dest_file)
+
+def run(site_configs):
+
+    for box_config in site_configs:
+
+        new_po = 'interface Port-channel' + box_config.portch_VCE_VPE  # 4 e' fisso, 1 e' il sito e l ultimo numero e' la coppia
+
+        # be2po_map OR BETTER vpe_to_osw_if_mapping reports all trunk interfaces (main BE/PO and voice/sig trunks)
+        # This MUST BE CONFIGURED on STAGE_4 both VCE and VPE steps
+        #
+
+        be2po_map = {'interface Bundle-Ether' + box_config.portch_OSW_VPE:
+                      'interface Port-channel' + box_config.portch_OSW_VPE}  # This is BE <--> PO mapping
+        be2po_map.update(box_config.be2po_map_voice_trunks)
+
+        # vpeosw_to_vpevce maps all old trunks with new one
+        # questi sono
+        vpeosw_to_vpevce_map = {'Bundle-Ether' + box_config.portch_OSW_VPE:
+                               'Bundle-Ether' + box_config.portch_VCE_VPE}
+        vpeosw_to_vpevce_map.update(box_config.vpeosw_to_vpevce)
+
+        NEW_BE = 'interface Bundle-Ether'  + box_config.portch_VCE_VPE
+        OLD_BE = 'interface Bundle-Ether' + box_config.portch_OSW_VPE
+        PO_OSW_MATE = 'Port-channel' + box_config.portch_OSW_OSW
+
+        OSW_SWITCH = box_config.switch
+        VSW_SWITCH = box_config.vsw_switch
+        VPE_ROUTER = box_config.vpe_router
+        VCE_SWITCH = box_config.vce_switch
+
+        BASE_DIR = box_config.base_dir + box_config.site + box_config.switch + "/Stage_4/VCE/"
+
+        VPE_CFG_TXT = BASE_DIR + VPE_ROUTER + '.txt'
+        OSW_CFG_TXT = BASE_DIR + OSW_SWITCH + '.txt'
+        VCE_CFG_TXT_OUT = BASE_DIR + OSW_SWITCH + 'VPE_addendum.txt'
+        VCE_CFG_TXT_IN = BASE_DIR + OSW_SWITCH + 'VCE.txt'
+
+        print('Script Starts')
+        ############## MAIN ###########
+
+        if_subif_map = create_if_subif_map(VPE_CFG_TXT, be2po_map)
+        migration_map = create_migartion_map(if_subif_map,VPE_CFG_TXT, be2po_map, NEW_BE)
+        if_cfg_list = create_if_cfg_list(migration_map, VPE_CFG_TXT, VCE_CFG_TXT_IN)
+        router_static_cfg = get_router_static(vpeosw_to_vpevce_map, VPE_CFG_TXT, VCE_CFG_TXT_IN)
+        #
+        router_hsrp_cfg = get_router_hsrp(vpeosw_to_vpevce_map, VPE_CFG_TXT, be2po_map, VCE_CFG_TXT_IN)
+        router_hsrp_vrrp_cfg = add_vrrpvip_to_hsrp_cfg(router_hsrp_cfg, OSW_CFG_TXT)
+        #
+        conf_to_wite = if_cfg_list + router_static_cfg + router_hsrp_vrrp_cfg
+        write_cfg(conf_to_wite, VCE_CFG_TXT_OUT)
+        #save also in final folder
+        final_folder = box_config.base_dir + box_config.site + "FINAL/" + OSW_SWITCH + 'VPE_addendum.txt'
+        write_cfg(conf_to_wite, final_folder)
+        print('Script Ends')
+
+        print('Script Ends')
+
+if __name__ == "__main__":
+    site_configs = get_site_configs(SITES_CONFIG_FOLDER)
+    copy_folder(site_configs)
+    run(site_configs)

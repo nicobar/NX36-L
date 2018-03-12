@@ -1,11 +1,9 @@
 import json
 import os
 
-
 def open_file(path):
     with open(path) as f:
         return json.load(f)
-
 
 def exists(path):
     """Test whether a path exists.  Returns False for broken symbolic links"""
@@ -14,7 +12,6 @@ def exists(path):
     except os.error:
         return False
     return True
-
 
 # This is to know folder where the script is launched from +  "/site_config_folder.json"
 config_path = open_file(os.path.dirname(os.path.realpath(__file__)) + "/site_config_folder.json")
@@ -69,7 +66,7 @@ class SiteConfig():
         self.vpe_router = site_config["vpe_router"]
         self.vsw_switch = site_config["vsw_switch"]
         self.be2po_map_voice_trunks = site_config["be2po_map_voice_trunks"]
-
+        self.vpeosw_to_vpevce = site_config["vpeosw_to_vpevce"]
 #if __name__ == "__main__":
 #    x = get_site_configs(SITES_CONFIG_FOLDER)
 #    for i in x:

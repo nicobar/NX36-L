@@ -32,6 +32,7 @@ def create_if_subif_map(VPE_CFG_TXT, be2po_map):
     for int_obj in int_obj_list:
         sub_list = int_obj.text.split('.')
         if sub_list[0] in be2po_map:
+            print(sub_list[0])
             if len(sub_list) == 2:
                 mymap.setdefault(sub_list[0], list()).append(sub_list[1])
             elif len(sub_list) == 1:
@@ -186,6 +187,17 @@ def get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, VCE_CFG_TXT_IN):
 
     #stp_conf = parse.find_lines(r'^spanning-tree vlan|^no spanning-tree vlan' )
     stp_conf = parse.find_lines(r'^no spanning-tree vlan')
+    #comment this line
+    stp_conf[0] = '!' + stp_conf[0]
+
+    import json
+    vlan_without_spt = []
+    with open(CMD_PATH + OSW_SWITCH + '_vlan_with_spanning_tree.txt') as f:
+        vlan_without_spt = json.load(f)
+    if len(vlan_without_spt) > 0:
+        stp_conf.append('no spanning-tree vlan {0}'.format(','.join(vlan_without_spt)))
+        stp_conf.append('!')
+
     mac_address = get_switch_mac_address(CMD_PATH, OSW_SWITCH)
     if mac_address is not None:
         map_mac_bridge[mac_address] = OSW_SWITCH
@@ -228,9 +240,7 @@ def get_801_802_svi(OSW_CFG_TXT):
             SVI_header[0] = SVI_header[0].replace('802', '1052')
 
         p = [x for x in SVI_header if x[:8] == 'interfac' or x[:8] == ' ip ospf']
-
     return p
-
 
 def from_range_to_list(range_str):
     ''' from '1-4' to '1,2,3,4' '''
@@ -328,14 +338,14 @@ def get_po_vce_vsw1_301_and_1000(VSW_CFG_TXT_IN):
 
 def write_cfg(conf_list, VCE_CFG_TXT_OUT):
     ''' write conf_list on a file whom file_name contains device '''
-
+    print(VCE_CFG_TXT_OUT)
     f = open(VCE_CFG_TXT_OUT, 'w+')
     for line in conf_list:
         f.write(line + '\n')
     f.close()
 
 
-def prepare_stage_vce(site_configs):
+def copy_folder(site_configs):
 
     for site_config in site_configs:
         #copying site config
@@ -504,17 +514,13 @@ def run(site_configs):
         for elem in vce_conf:
             print(elem)
         write_cfg(vce_conf, VCE_CFG_TXT_OUT)
+        #save also in final folder
+        final_folder = box_config.base_dir + box_config.site + "FINAL/" + OSW_SWITCH + 'VCE_addendum.txt'
+        write_cfg(vce_conf, final_folder)
         print('Script Ends')
-
-
-def prepare_stage(site_configs):
-    from download_site_commands import get_command
-
-    get_command(site_configs)
-    prepare_stage_vce(site_configs)
 
 
 if __name__ == "__main__":
     site_configs = get_site_configs(SITES_CONFIG_FOLDER)
-    prepare_stage(site_configs)
+    copy_folder(site_configs)
     run(site_configs)
