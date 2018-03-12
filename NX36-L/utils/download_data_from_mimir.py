@@ -15,7 +15,6 @@ get device id
 https://mimir-prod.cisco.com/api/mimir/np/devices?cpyKey=70293&deviceName=MIOSW058
 '''
 
-
 def save_result(config, dest_path, file_name):
     filepath = dest_path + file_name + '.txt'
     if not os.path.exists(dest_path):
@@ -23,7 +22,6 @@ def save_result(config, dest_path, file_name):
     with open(filepath, 'w') as f:
         f.write(config)
         f.close()
-
 
 class Get_Command():
     def __init__(self, credentials, box_config):
@@ -92,7 +90,7 @@ class Get_Command():
         else:
             return (data["data"][0]["rawData"])
 
-#prints vlan similar higher than 4000 which has to have spanning tree
+#prints vlan similar higher than 4000 which has to have spanning tree disabled
 def check_vlan_similar_to_4093(output_command, box_config):
         vlans_with_spanning_tree = []
         config = output_command.split("!")
@@ -109,7 +107,7 @@ def check_vlan_similar_to_4093(output_command, box_config):
         base_dir = box_config.base_dir + box_config.site
         if not os.path.exists(base_dir + "DATA_SRC/CMD/"):
             os.makedirs(base_dir + "DATA_SRC/CMD/")
-        with open(base_dir + "DATA_SRC/CMD/" +  box_config.switch + "_vlan_with_spanning_tree.txt", 'w') as f:
+        with open(base_dir + "DATA_SRC/CMD/" +  box_config.switch + "_vlan_similar_to_4093.txt", 'w') as f:
             json.dump(vlans_with_spanning_tree, f)
 
 def replace_vlan4093(output_command, box_config):
@@ -227,13 +225,16 @@ def get_command(site_configs):
                 save_command = Get_Command(credentials, box_config)
                 id = save_command.get_deviceID()
                 save_command.set_deviceID(id)
+
                 output_command = save_command.get_cmd(cmd)
+                #replace vlan 4093 with 4000
+                output_command = output_command.replace('4093', '4000')
+
                 save_result(output_command, base_dir + "DATA_SRC/CMD/", box_config.switch + '_' + cmd.replace(' ', '_'))
 
                 print(box_config.switch + "_" + cmd.replace(' ', '_') + ".txt" + " file has been downloaded for " + box_config.switch + ".")
             elif exists(base_dir + "DATA_SRC/CMD/" + box_config.switch + '_' + cmd.replace(' ', '_') + '.txt'):
                 print(box_config.switch + "_" + cmd.replace(' ', '_') + ".txt" + " file is already in place in " + base_dir + "DATA_SRC/CMD/")
-
 
 def save_result(config, dest_path, file_name):
     filepath = dest_path + file_name + '.txt'

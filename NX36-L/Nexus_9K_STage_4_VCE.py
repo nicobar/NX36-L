@@ -190,9 +190,10 @@ def get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, VCE_CFG_TXT_IN):
     #comment this line
     stp_conf[0] = '!' + stp_conf[0]
 
+    # insert vlan similar to 4093 without spanning-tree
     import json
     vlan_without_spt = []
-    with open(CMD_PATH + OSW_SWITCH + '_vlan_with_spanning_tree.txt') as f:
+    with open(CMD_PATH + OSW_SWITCH + '_vlan_similar_to_4093.txt') as f:
         vlan_without_spt = json.load(f)
     if len(vlan_without_spt) > 0:
         stp_conf.append('no spanning-tree vlan {0}'.format(','.join(vlan_without_spt)))
@@ -214,6 +215,10 @@ def get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, VCE_CFG_TXT_IN):
     srb_vlan_lst = [vlan for vlan in migrating_vlan_lst if map_vlan_macbridge[vlan] is not OSW_SWITCH]
     rb_vlan_lst.sort(key=natural_keys)
     srb_vlan_lst.sort(key=natural_keys)
+
+    # removes all vlans  which do not require spanning tree
+    rb_vlan_lst = [x for x in rb_vlan_lst if x not in vlan_without_spt]
+    srb_vlan_lst = [x for x in srb_vlan_lst if x not in vlan_without_spt]
 
     line_rb = 'spanning-tree vlan {0} priority 24576'.format(','.join(rb_vlan_lst))
     line_srb = 'spanning-tree vlan {0} priority 28672'.format(','.join(srb_vlan_lst))
