@@ -33,9 +33,6 @@ class Create_Excel():
             col2 = chr(ord('B') + column)
             cell2 = "{}{}".format(col2, row2)
             cell1 = "{}{}".format(col1, row1)
-            ######## replace vlan 4093 with 4000 ######
-            if self.original_excel[cell2].value == '4093':
-                self.original_excel[cell2].value = '4000'
             self.new_excel[cell1].value = self.original_excel[cell2].value
             if self.original_excel[cell2].has_style:
                 self.new_excel[cell1].font = copy(self.original_excel[cell2].font)
