@@ -3,6 +3,10 @@ import pexpect
 import time
 import ciscoconfparse as c
 
+import sys
+sys.path.insert(0, 'utils')
+from get_site_data import get_site_configs, SITES_CONFIG_FOLDER, exists
+
 
 def atoi(text):
     return int(text) if text.isdigit() else text
@@ -17,7 +21,7 @@ def natural_keys(text):
     return [atoi(c) for c in re.split('(\d+)', text)]
 
 
-def create_if_subif_map():
+def create_if_subif_map(VPE_CFG_TXT, be2po_map):
     ''' Creates dict {interface_trunk: ['vlan1', ..., 'vlanN]' } '''
 
     mymap = {}
@@ -28,6 +32,7 @@ def create_if_subif_map():
     for int_obj in int_obj_list:
         sub_list = int_obj.text.split('.')
         if sub_list[0] in be2po_map:
+            print(sub_list[0])
             if len(sub_list) == 2:
                 mymap.setdefault(sub_list[0], list()).append(sub_list[1])
             elif len(sub_list) == 1:
@@ -35,7 +40,7 @@ def create_if_subif_map():
     return mymap
 
 
-def get_vlan_to_be_migrated():
+def get_vlan_to_be_migrated(VCE_CFG_TXT_IN):
     ''' get vlan from VCE config (Stage_3 output) '''
 
     vlan_list = []
@@ -88,12 +93,12 @@ def check_vlan_consistency(my_subif_map, my_vlan_tbm):
         print('Le VLAN non definite sono: {}'.format(my_diff))
 
 
-def get_po_vce():
+def get_po_vce(VPE_CFG_TXT, VCE_CFG_TXT_IN, new_po, be2po_map):
     ''' get vlan from VPE subif and check if are in vlan_to_be_migrated_set '''
 
-    if_subif_map = create_if_subif_map()
+    if_subif_map = create_if_subif_map(VPE_CFG_TXT, be2po_map)
 
-    vlan_tbm = get_vlan_to_be_migrated()
+    vlan_tbm = get_vlan_to_be_migrated(VCE_CFG_TXT_IN)
 
     check_vlan_consistency(if_subif_map, vlan_tbm)
 
@@ -123,7 +128,7 @@ def get_po_vce():
     return vce_po_cfg_h
 
 
-def get_switch_mac_address():
+def get_switch_mac_address(CMD_PATH, OSW_SWITCH):
     ''' return a string containing mac address '''
 
     file_name = CMD_PATH + OSW_SWITCH + '_show_spanning-tree_bridge_address.txt'
@@ -135,7 +140,7 @@ def get_switch_mac_address():
     return mac
 
 
-def get_rb_per_vlan():
+def get_rb_per_vlan(CMD_PATH, OSW_SWITCH):
     ''' return a map {vlan: mac} '''
 
     file_name = CMD_PATH + OSW_SWITCH + '_show_spanning-tree_root_brief.txt'
@@ -174,7 +179,7 @@ def from_file_to_cfg_as_list(file_name):
     return show_cmd
 
 
-def get_stp_conf():
+def get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, VCE_CFG_TXT_IN):
 
     map_mac_bridge = {}
 
@@ -182,22 +187,38 @@ def get_stp_conf():
 
     #stp_conf = parse.find_lines(r'^spanning-tree vlan|^no spanning-tree vlan' )
     stp_conf = parse.find_lines(r'^no spanning-tree vlan')
-    mac_address = get_switch_mac_address()
+    #comment this line
+    stp_conf[0] = '!' + stp_conf[0]
+
+    # insert vlan similar to 4093 without spanning-tree
+    import json
+    vlan_without_spt = []
+    with open(CMD_PATH + OSW_SWITCH + '_vlan_similar_to_4093.txt') as f:
+        vlan_without_spt = json.load(f)
+    if len(vlan_without_spt) > 0:
+        stp_conf.append('no spanning-tree vlan {0}'.format(','.join(vlan_without_spt)))
+        stp_conf.append('!')
+
+    mac_address = get_switch_mac_address(CMD_PATH, OSW_SWITCH)
     if mac_address is not None:
         map_mac_bridge[mac_address] = OSW_SWITCH
     #print mac_address
-    map_vlan_macbridge = get_rb_per_vlan()
+    map_vlan_macbridge = get_rb_per_vlan(CMD_PATH, OSW_SWITCH)
     for elem in map_vlan_macbridge:
         if map_vlan_macbridge[elem] == mac_address:
             map_vlan_macbridge[elem] = map_mac_bridge[mac_address]
         else:
             continue
-    vlan_tbm_list = get_vlan_to_be_migrated()
+    vlan_tbm_list = get_vlan_to_be_migrated(VCE_CFG_TXT_IN)
     migrating_vlan_lst = [vlan for vlan in map_vlan_macbridge if vlan in vlan_tbm_list]
     rb_vlan_lst = [vlan for vlan in migrating_vlan_lst if map_vlan_macbridge[vlan] == OSW_SWITCH]
     srb_vlan_lst = [vlan for vlan in migrating_vlan_lst if map_vlan_macbridge[vlan] is not OSW_SWITCH]
     rb_vlan_lst.sort(key=natural_keys)
     srb_vlan_lst.sort(key=natural_keys)
+
+    # removes all vlans  which do not require spanning tree
+    rb_vlan_lst = [x for x in rb_vlan_lst if x not in vlan_without_spt]
+    srb_vlan_lst = [x for x in srb_vlan_lst if x not in vlan_without_spt]
 
     line_rb = 'spanning-tree vlan {0} priority 24576'.format(','.join(rb_vlan_lst))
     line_srb = 'spanning-tree vlan {0} priority 28672'.format(','.join(srb_vlan_lst))
@@ -209,22 +230,22 @@ def get_stp_conf():
     return stp_conf
 
 
-def get_801_802_svi():
+def get_801_802_svi(OSW_CFG_TXT):
     ''' we transform 80x in 105y and keep just ip ospf command, all other command are there since NIP '''
 
+    p = []
     parse = c.CiscoConfParse(OSW_CFG_TXT)
 
     SVI_header = parse.find_children(r'^interface Vlan801|^interface Vlan802')
 
-    if SVI_header[0].find('801') > 0:
-        SVI_header[0] = SVI_header[0].replace('801', '1051')
-    elif SVI_header[0].find('802') > 0:
-        SVI_header[0] = SVI_header[0].replace('802', '1052')
+    if len(SVI_header) > 0:
+        if SVI_header[0].find('801') > 0:
+            SVI_header[0] = SVI_header[0].replace('801', '1051')
+        elif SVI_header[0].find('802') > 0:
+            SVI_header[0] = SVI_header[0].replace('802', '1052')
 
-    p = [x for x in SVI_header if x[:8] == 'interfac' or x[:8] == ' ip ospf']
-
+        p = [x for x in SVI_header if x[:8] == 'interfac' or x[:8] == ' ip ospf']
     return p
-
 
 def from_range_to_list(range_str):
     ''' from '1-4' to '1,2,3,4' '''
@@ -238,7 +259,7 @@ def from_range_to_list(range_str):
     return mylist
 
 
-def get_po_vce_vce_700():
+def get_po_vce_vce_700(OSW_CFG_TXT, PO_OSW_MATE, VCE_CFG_TXT_IN):
 
     osw_vlan_set = set()
     help_str = ''
@@ -250,7 +271,7 @@ def get_po_vce_vce_700():
 
     #for v in vlan1:
     #    vlan_semifinal1.append(v.split()[1])
-    vlan_semifinal1 = get_vlan_to_be_migrated()
+    vlan_semifinal1 = get_vlan_to_be_migrated(VCE_CFG_TXT_IN)
 
     po_obj = parse_osw.find_objects(r'^interface ' + PO_OSW_MATE)
     po_cfg = po_obj[0].ioscfg
@@ -291,7 +312,7 @@ def get_po_vce_vce_700():
     return po_700
 
 
-def get_po_vce_vsw1_301_and_1000():
+def get_po_vce_vsw1_301_and_1000(VSW_CFG_TXT_IN):
 
     vlan_final = []
 
@@ -320,51 +341,191 @@ def get_po_vce_vsw1_301_and_1000():
     return po_301_tot, po_1000_tot
 
 
-def write_cfg(conf_list):
+def write_cfg(conf_list, VCE_CFG_TXT_OUT):
     ''' write conf_list on a file whom file_name contains device '''
-
+    print(VCE_CFG_TXT_OUT)
     f = open(VCE_CFG_TXT_OUT, 'w+')
     for line in conf_list:
         f.write(line + '\n')
     f.close()
+
+
+def copy_folder(site_configs):
+
+    for site_config in site_configs:
+        #copying site config
+        source_path = site_config.base_dir + site_config.site + "DATA_SRC/CFG/"
+        source_file_osw = source_path + site_config.switch + ".txt"
+        source_file_vpe = source_path + site_config.vpe_router + ".txt"
+        dest_path = site_config.base_dir + site_config.site + site_config.switch + "/Stage_4/VCE/"
+        dest_file_osw = dest_path + site_config.switch + ".txt"
+        dest_file_vpe = dest_path + site_config.vpe_router + ".txt"
+        for dest_file, source_file in zip([dest_file_osw, dest_file_vpe], [source_file_osw, source_file_vpe]):
+            if exists(dest_file):
+                print(dest_file + " already exists.")
+            else:
+                print("Copying " + dest_file)
+                copy_file(source_file, dest_file, dest_path)
+
+        #copying xls config
+        source_path = site_config.base_dir + site_config.site + "FINAL/"
+        source_file_vce = source_path + site_config.switch + "VCE.txt"
+        source_file_vsw = source_path + site_config.switch + "VSW.txt"
+        dest_path = site_config.base_dir + site_config.site + site_config.switch + "/Stage_4/VCE/"
+        dest_file_vce = dest_path + site_config.switch + "VCE.txt"
+        dest_file_vsw = dest_path + site_config.switch + "VSW.txt"
+        for dest_file, source_file in zip([dest_file_vce, dest_file_vsw], [source_file_vce, source_file_vsw]):
+            if exists(dest_file):
+                print(dest_path + " already exists.")
+            else:
+                print("Copying " + dest_file)
+                copy_file(source_file, dest_file, dest_path)
+
+
+def create_dir(dest_path):
+    import os
+    if not os.path.exists(dest_path):
+        os.makedirs(dest_path)
+
+
+def copy_file(source_file, dest_file, dest_path):
+    import shutil
+    if not exists(source_file):
+        print("File " + source_file + ".txt is missing. \nPlease create it.")
+        exit(0)
+    create_dir(dest_path)
+    shutil.copy(source_file, dest_file)
+#     def prepare_stage_4_vce_files(self):
+#
+#         dest_path = self.box_config.base_dir + self.box_config.site + self.box_config.switch + 'Stage_4/VCE/'
+#         src_cfg_path = self.box_config.base_dir + self.box_config.site + + 'DATA_SRC/CFG'
+#         src_final_path = self.box_config.base_dir + self.box_config.site + + 'FINAL/'
+#
+#         vpe_file = dest_path
+#         if not os.path.exists(dest_path):
+#             os.makedirs(dest_path)
+#
+#         dst_vpe_path = dest_path + self.box_config.vpe_router + '.txt'
+#         src_vpe_path = src_cfg_path + self.box_config.vpe_router + '.txt'
+#         if not os.is_file(dst_vpe_path):
+#             print("copying " + src_vpe_path + " to " + dst_vpe_path)
+#             copyfile(src_vpe_path, dst_vpe_path)
+#         else:
+#             print(dst_vpe_path + "already exists")
+#
+#         dst_osw_path = dest_path + self.box_config.switch + '.txt'
+#         src_osw_path = src_cfg_path + self.box_config.switch + '.txt'
+#         if not os.is_file(dst_osw_path):
+#             print("copying " + src_vpe_path + " to " + dst_vpe_path)
+#             copyfile(src_vpe_path, dst_vpe_path)
+#         else:
+#             print(dst_vpe_path)
+#
+#         dst_vce_path = dest_path + self.box_config.switch + 'VCE.txt'
+#         src_vce_path = src_final_path + self.box_config.switch + 'VCE.txt'
+#         if not os.is_file(dst_vce_path):
+#             print("copying " + src_vce_path + " to " + dst_vce_path)
+#             copyfile(src_vce_path, dst_vce_path)
+#         else:
+#             print(dst_vce_path)
+#
+#         dst_vsw_path = dest_path + self.box_config.switch + 'VSW.txt'
+#         src_vsw_path = src_final_path + self.box_config.switch + 'VSW.txt'
+#         if not os.is_file(dst_vsw_path):
+#             print("copying " + src_vsw_path + " to " + dst_vsw_path)
+#             copyfile(src_vsw_path, dst_vsw_path)
+#         else:
+#             print(dst_vsw_path)
+
 #################### CONSTATNT ##################
 
 
-new_po = 'interface Port-channel411' #4 e' fisso, 1 e' il sito e l ultimo numero e' la coppia
-
-# be2po_map OR BETTER vpe_to_osw_if_mapping reports all trunk interfaces (main BE/PO and voice/sig trunks)
-# This MUST BE CONFIGURED on STAGE_4 both VCE and VPE steps
+# new_po = 'interface Port-channel411'  # 4 e' fisso, 1 e' il sito e l ultimo numero e' la coppia
 #
-
-be2po_map = {'interface Bundle-Ether111': 'interface Port-channel111',               # This is BE <--> PO mapping
-             'interface GigabitEthernet0/2/1/1': 'interface GigabitEthernet4/6',  # This is VOICE/SIG TRUNK mapping
-             'interface GigabitEthernet0/7/1/1': 'interface GigabitEthernet4/7',  # This is VOICE/SIG TRUNK mapping
-             'interface GigabitEthernet0/2/1/2': 'interface GigabitEthernet4/8',  # This is VOICE/SIG TRUNK mapping
-             }
-
-PO_OSW_MATE = 'Port-channel1'
-
-OSW_SWITCH = 'PAOSW011'
-VSW_SWITCH = 'PAVSW01101'
-VPE_ROUTER = 'PAVPE013'
-VCE_SWITCH = 'PAVCE011'
-
-VPE_CFG_TXT = BASE_DIR + VPE_ROUTER + '.txt'
-OSW_CFG_TXT = BASE_DIR + OSW_SWITCH + '.txt'
-VSW_CFG_TXT_IN = BASE_DIR + OSW_SWITCH + 'VSW.txt'
-VCE_CFG_TXT_OUT = BASE_DIR + OSW_SWITCH + 'VCE_addendum.txt'
-VCE_CFG_TXT_IN = BASE_DIR + OSW_SWITCH + 'VCE.txt'
+# # be2po_map OR BETTER vpe_to_osw_if_mapping reports all trunk interfaces (main BE/PO and voice/sig trunks)
+# # This MUST BE CONFIGURED on STAGE_4 both VCE and VPE steps
+# #
+#
+# be2po_map = {'interface Bundle-Ether111': 'interface Port-channel111',               # This is BE <--> PO mapping
+#              'interface GigabitEthernet0/2/1/1': 'interface GigabitEthernet4/6',  # This is VOICE/SIG TRUNK mapping
+#              'interface GigabitEthernet0/7/1/1': 'interface GigabitEthernet4/7',  # This is VOICE/SIG TRUNK mapping
+#              'interface GigabitEthernet0/2/1/2': 'interface GigabitEthernet4/8',  # This is VOICE/SIG TRUNK mapping
+#              }
+#
+# PO_OSW_MATE = 'Port-channel1'
+#
+# OSW_SWITCH = 'PAOSW011'
+# VSW_SWITCH = 'PAVSW01101'
+# VPE_ROUTER = 'PAVPE013'
+# VCE_SWITCH = 'PAVCE011'
+#
+# VPE_CFG_TXT = BASE_DIR + VPE_ROUTER + '.txt'
+# OSW_CFG_TXT = BASE_DIR + OSW_SWITCH + '.txt'
+# VSW_CFG_TXT_IN = BASE_DIR + OSW_SWITCH + 'VSW.txt'
+# VCE_CFG_TXT_OUT = BASE_DIR + OSW_SWITCH + 'VCE_addendum.txt'
+# VCE_CFG_TXT_IN = BASE_DIR + OSW_SWITCH + 'VCE.txt'
 
 
 ############## MAIN ###########
-print('Script Starts')
-po_vce_cfg_list = get_po_vce()
-stp_cfg_list = get_stp_conf()
-svi_conf_list = get_801_802_svi()
-po700_conf = get_po_vce_vce_700()
-po301_conf, po1000_conf = get_po_vce_vsw1_301_and_1000()
-vce_conf = ['!'] + stp_cfg_list + ['!'] + po_vce_cfg_list + ['!'] + po700_conf + ['!'] + po1000_conf + ['!'] + po301_conf + ['!'] + svi_conf_list + ['!']
-for elem in vce_conf:
-    print(elem)
-write_cfg(vce_conf)
-print('Script Ends')
+# print('Script Starts')
+# po_vce_cfg_list = get_po_vce()
+# stp_cfg_list = get_stp_conf()
+# svi_conf_list = get_801_802_svi()
+# po700_conf = get_po_vce_vce_700()
+# po301_conf, po1000_conf = get_po_vce_vsw1_301_and_1000()
+# vce_conf = ['!'] + stp_cfg_list + ['!'] + po_vce_cfg_list + ['!'] + po700_conf + ['!'] + po1000_conf + ['!'] + po301_conf + ['!'] + svi_conf_list + ['!']
+# for elem in vce_conf:
+#     print(elem)
+# write_cfg(vce_conf)
+# print('Script Ends')
+
+
+def run(site_configs):
+
+    for box_config in site_configs:
+
+        new_po = 'interface Port-channel' + box_config.portch_VCE_VPE  # 4 e' fisso, 1 e' il sito e l ultimo numero e' la coppia
+
+        # be2po_map OR BETTER vpe_to_osw_if_mapping reports all trunk interfaces (main BE/PO and voice/sig trunks)
+        # This MUST BE CONFIGURED on STAGE_4 both VCE and VPE steps
+        #
+
+        be2po_map = {'interface Bundle-Ether' + box_config.portch_OSW_VPE: 'interface Port-channel' + box_config.portch_OSW_VPE}  # This is BE <--> PO mapping
+        be2po_map.update(box_config.be2po_map_voice_trunks)
+
+        PO_OSW_MATE = 'Port-channel' + box_config.portch_OSW_OSW
+
+        OSW_SWITCH = box_config.switch
+        VSW_SWITCH = box_config.vsw_switch
+        VPE_ROUTER = box_config.vpe_router
+        VCE_SWITCH = box_config.vce_switch
+
+        BASE_DIR = box_config.base_dir + box_config.site + box_config.switch + "/Stage_4/VCE/"
+        CMD_PATH = box_config.base_dir + box_config.site + "/DATA_SRC/CMD/"
+
+        VPE_CFG_TXT = BASE_DIR + VPE_ROUTER + '.txt'
+        OSW_CFG_TXT = BASE_DIR + OSW_SWITCH + '.txt'
+        VSW_CFG_TXT_IN = BASE_DIR + OSW_SWITCH + 'VSW.txt'
+        VCE_CFG_TXT_OUT = BASE_DIR + OSW_SWITCH + 'VCE_addendum.txt'
+        VCE_CFG_TXT_IN = BASE_DIR + OSW_SWITCH + 'VCE.txt'
+
+        print('Script Starts')
+        po_vce_cfg_list = get_po_vce(VPE_CFG_TXT, VCE_CFG_TXT_IN, new_po, be2po_map)
+        stp_cfg_list = get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, VCE_CFG_TXT_IN)
+        svi_conf_list = get_801_802_svi(OSW_CFG_TXT)
+        po700_conf = get_po_vce_vce_700(OSW_CFG_TXT, PO_OSW_MATE, VCE_CFG_TXT_IN)
+        po301_conf, po1000_conf = get_po_vce_vsw1_301_and_1000(VSW_CFG_TXT_IN)
+        vce_conf = ['!'] + stp_cfg_list + ['!'] + po_vce_cfg_list + ['!'] + po700_conf + ['!'] + po1000_conf + ['!'] + po301_conf + ['!'] + svi_conf_list + ['!']
+        for elem in vce_conf:
+            print(elem)
+        write_cfg(vce_conf, VCE_CFG_TXT_OUT)
+        #save also in final folder
+        final_folder = box_config.base_dir + box_config.site + "FINAL/" + OSW_SWITCH + 'VCE_addendum.txt'
+        write_cfg(vce_conf, final_folder)
+        print('Script Ends')
+
+
+if __name__ == "__main__":
+    site_configs = get_site_configs(SITES_CONFIG_FOLDER)
+    copy_folder(site_configs)
+    run(site_configs)

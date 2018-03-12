@@ -191,12 +191,12 @@ def create_dir(dest_path):
 
 def copy_file(site_config, source_path, dest_path):
     import shutil
-    src_file = source_path + site_config.switch + "_checked_v1.0_OUT_DB_OPT.XLSX"
+    src_file = source_path + site_config.switch + "_checked_v" + str(site_config.checked_version) + ".0_OUT_DB_OPT.XLSX"
     dst_file = dest_path + site_config.switch + "_OUT_DB_OPT.XLSX"
     create_dir(dest_path)
     shutil.copy(src_file, dst_file)
 
-def prepare_stage(site_configs):
+def create_folder(site_configs):
     for site_config in site_configs:
         source_path = site_config.base_dir + site_config.site + "/DATA_SRC/XLS/OUTPUT_STAGE_1.5/"
         if not exists(source_path + site_config.switch + "_checked_v"
@@ -225,5 +225,5 @@ def run(site_configs):
 
 if __name__ == "__main__":
     site_configs = get_site_configs(SITES_CONFIG_FOLDER)
-    prepare_stage(site_configs)
+    create_folder(site_configs)
     run(site_configs)

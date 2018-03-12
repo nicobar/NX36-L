@@ -6,14 +6,20 @@
 import ciscoconfparse as c
 from openpyxl.workbook import Workbook
 
+import sys
+sys.path.insert(0, 'utils')
+
+from get_site_data import get_site_configs, SITES_CONFIG_FOLDER, exists
+
+
 #############################################
 ################# Functions #################
 #############################################
 
 
-def manage_interface_description(wb, osw_list):
+def manage_interface_description(wb, osw_list, CMD_PATH):
 
-    sheet = 'show_interfaces_description'
+    sheet = 'show_interface_description'
 
     ws = wb.create_sheet(title=sheet, index=0)
 
@@ -41,7 +47,7 @@ def manage_interface_description(wb, osw_list):
     print('End manage_interface_description')
 
 
-def manage_standby_brief(wb, osw_list):
+def manage_standby_brief(wb, osw_list, CMD_PATH):
 
     sheet = 'show_standby_brief'
 
@@ -70,7 +76,7 @@ def manage_standby_brief(wb, osw_list):
     print('End manage_standby brief')
 
 
-def manage_vrrp_brief(wb, osw_list):
+def manage_vrrp_brief(wb, osw_list, CMD_PATH):
 
     sheet = 'show_vrrp_brief'
 
@@ -99,9 +105,20 @@ def manage_vrrp_brief(wb, osw_list):
     print('End manage_vrrp_brief')
 
 
-def manage_interface_trunk(wb, osw_list):
+def manage_interface_trunk(wb, osw_list, CMD_PATH):
 
-    sheet = 'show_interface_CE2CE_trunk'
+    possible_trunks = ['show_interface_po1_trunk',
+                       'show_interface_po10_trunk',
+                       'show_interface_po100_trunk']
+
+    sheet = ''
+    for sh in possible_trunks:
+        filename = CMD_PATH + osw_list[0] + '_' + sh + '.txt'
+        import os
+        statinfo = os.stat(filename)
+        if statinfo.st_size > 1:
+            sheet = sh
+            break
 
     ws = wb.create_sheet(title=sheet, index=0)
     text = ''
@@ -149,7 +166,7 @@ def manage_interface_trunk(wb, osw_list):
     print('End manage_interface_trunk')
 
 
-def manage_vlan_brief(wb, osw_list):
+def manage_vlan_brief(wb, osw_list, CMD_PATH):
 
     sheet_osw1 = 'show_vlan_brief_OSW1'
     sheet_osw2 = 'show_vlan_brief_OSW2'
@@ -183,11 +200,15 @@ def manage_vlan_brief(wb, osw_list):
     print('End manage_vlan_brief')
 
 
-def manage_nexus_vlan_db(wb, nexus_file_dict):
+def manage_nexus_vlan_db(wb, nexus_file_dict, OSW_LIST, AID_PATH):
 
     print('Starting manage_nexus_vlan_db')
 
-    nexus_file_list = [nexus_file_dict[OSW_LIST[0]][0], nexus_file_dict[OSW_LIST[1]][0], nexus_file_dict[OSW_LIST[0]][2], ]
+    nexus_file_list = [ nexus_file_dict[OSW_LIST[0]][0],
+                        nexus_file_dict[OSW_LIST[1]][0],
+                        nexus_file_dict[OSW_LIST[0]][2],
+                      ]
+
     nexusfile_to_sheet_dict = {nexus_file_list[0]: 'vlan_db_VCE1',
                                nexus_file_list[1]: 'vlan_db_VCE2',
                                nexus_file_list[2]: 'vlan_db_VSW'}
@@ -221,7 +242,7 @@ def manage_nexus_vlan_db(wb, nexus_file_dict):
     print('End manage_nexus_vlan_db')
 
 
-def manage_dot1q(wb, vce2vpe_po, nexus_file_dict, vpe_list, trunk_map):
+def manage_dot1q(wb, vce2vpe_po, nexus_file_dict, vpe_list, trunk_map, OSW_LIST, AID_PATH):
 
     # trunk_map = {vpe_node: [trunk1, trunk2, ]} where trunks are VPE to OSW trunks by VPE side
     print('Starting manage_dot1q on VCE and VPE')
@@ -247,7 +268,7 @@ def manage_dot1q(wb, vce2vpe_po, nexus_file_dict, vpe_list, trunk_map):
         create_sheet_for_vpe_tag(ws, vpe_node, vpe_file, trunk_map)
 
 
-def manage_rb(wb, node_list):
+def manage_rb(wb, node_list, CMD_PATH):
 
     print('Starting  manage_rb')
     mac_osw_map = dict()  # {mac: name}
@@ -256,8 +277,8 @@ def manage_rb(wb, node_list):
     ws = wb.create_sheet(title='Root-bridge_per_VLAN', index=0)
 
     for node in node_list:
-        mac_osw_map[get_switch_mac_address(node)] = node
-        vlan_rb_map.update(get_rb_per_vlan(node))
+        mac_osw_map[get_switch_mac_address(node, CMD_PATH)] = node
+        vlan_rb_map.update(get_rb_per_vlan(node, CMD_PATH))
 
     for vlan in vlan_rb_map.keys():
         if vlan_rb_map[vlan] in mac_osw_map.keys():
@@ -299,7 +320,7 @@ def manage_static_routes(wb, vce_file_list):
 #######################################
 
 
-def get_rb_per_vlan(osw):
+def get_rb_per_vlan(osw, CMD_PATH):
     ''' return a map {vlan: mac} indicating RB for osw '''
 
     sheet = 'show_spanning-tree_root_brief'
@@ -324,7 +345,7 @@ def get_rb_per_vlan(osw):
     return mp
 
 
-def get_switch_mac_address(osw):
+def get_switch_mac_address(osw, CMD_PATH):
     ''' return a string containing mac address of osw '''
 
     sheet = 'show_spanning-tree_bridge_address'
@@ -471,55 +492,119 @@ def get_indexes(text_list):
     return (first_index, second_index)
 
 
-#############################################
-################# VARIABLES #################
-#############################################
+
+def copy_folder(site_configs):
+
+    for site_config in site_configs:
+        #copying site config
+        source_path = site_config.base_dir + site_config.site + "FINAL/"
+        source_file_osw = source_path + site_config.switch + "VCE.txt"
+        source_file_vsw = source_path + site_config.switch + "VSW.txt"
+        source_path = site_config.base_dir + site_config.site + "DATA_SRC/CFG/"
+        source_file_vpe = source_path + site_config.vpe_router + ".txt"
+        dest_path = site_config.base_dir + site_config.site + "AID/"
+        dest_file_osw = dest_path + site_config.switch + "VCE.txt"
+        dest_file_vsw = dest_path + site_config.switch + "VSW.txt"
+        dest_file_vpe = dest_path + site_config.vpe_router + ".txt"
+        for dest_file, source_file in zip([dest_file_osw, dest_file_vsw, dest_file_vpe],
+                                          [source_file_osw, source_file_vsw, source_file_vpe]):
+            if exists(dest_file):
+                print(dest_file + " already exists.")
+            else:
+                print("Copying " + dest_file)
+                copy_file(source_file, dest_file, dest_path)
+
+    for site_config in site_configs:
+        #copying site config
+        source_path = site_config.base_dir + site_config.site + "FINAL/"
+        source_file_osw = source_path + site_config.switch + "VCE_addendum.txt"
+        source_file_vsw = source_path + site_config.switch + "VPE_addendum.txt"
+        dest_path = site_config.base_dir + site_config.site + "AID/"
+        dest_file_osw = dest_path + site_config.switch + "VCE_addendum.txt"
+        dest_file_vsw = dest_path + site_config.switch + "VPE_addendum.txt"
+        for dest_file, source_file in zip([dest_file_osw, dest_file_vsw], [source_file_osw, source_file_vsw]):
+            if exists(dest_file):
+                print(dest_file + " already exists.")
+            else:
+                print("Copying " + dest_file)
+                copy_file(source_file, dest_file, dest_path)
+
+def create_dir(dest_path):
+    import os
+    if not os.path.exists(dest_path):
+        os.makedirs(dest_path)
 
 
-OSW_LIST = ['PAOSW011',
-            'PAOSW012']
-VPE_LIST = ['PAVPE013',
-            'PAVPE014']
-OSW2OSW_PO = 'Port-channel1'
-VCE2VPE_PO = 'Port-channel411'
-# trunk_map = {vpe_node: [trunk1, trunk2, ]} where trunks are VPE to OSW trunks by VPE side
-TRUNK_MAP = {VPE_LIST[0]: ['Bundle-Ether111', 'GigabitEthernet0/2/1/1', 'GigabitEthernet0/2/1/2', 'GigabitEthernet0/7/1/1'],
-             VPE_LIST[1]: ['Bundle-Ether112', 'GigabitEthernet0/2/1/1', 'GigabitEthernet0/2/1/2', 'GigabitEthernet0/7/1/1']}
-BASE = '/mnt/hgfs/VM_shared/VF-2017/NMP/'
-SITE = 'PA01/'
-AID_PATH = BASE + SITE + 'AID/'
-CMD_PATH = BASE + SITE + 'DATA_SRC/CMD/'
-
-OUTPUT_XLS = AID_PATH + 'AID_to_{}_NMP.xlsx'.format(SITE[:-1])
-
-
-NEXUS_FILE_DICT = {OSW_LIST[0]: [OSW_LIST[0] + 'VCE.txt',
-                                 OSW_LIST[0] + 'VCE_addendum.txt',
-                                 OSW_LIST[0] + 'VSW.txt',
-                                 VPE_LIST[0] + 'VPE_addendum.txt'],
-                   OSW_LIST[1]: [OSW_LIST[1] + 'VCE.txt',
-                                 OSW_LIST[1] + 'VCE_addendum.txt',
-                                 OSW_LIST[1] + 'VSW.txt',
-                                 VPE_LIST[1] + 'VPE_addendum.txt']}
-
-VPE_FILE_LIST = [AID_PATH + VPE_LIST[0] + '.txt',
-                 AID_PATH + VPE_LIST[1] + '.txt']
-
-VCE_FILE_LIST = [AID_PATH + NEXUS_FILE_DICT[OSW_LIST[0]][0],
-                 AID_PATH + NEXUS_FILE_DICT[OSW_LIST[1]][0]]
-
+def copy_file(source_file, dest_file, dest_path):
+    import shutil
+    if not exists(source_file):
+        print("File " + source_file + " is missing. \nPlease create it.")
+        exit(0)
+    create_dir(dest_path)
+    shutil.copy(source_file, dest_file)
 ############################################
 ################# MAIN #####################
 ############################################
 
-wb = Workbook()
-manage_interface_description(wb, OSW_LIST)
-manage_standby_brief(wb, OSW_LIST)
-manage_vrrp_brief(wb, OSW_LIST)
-manage_interface_trunk(wb, OSW_LIST)
-manage_vlan_brief(wb, OSW_LIST)
-manage_nexus_vlan_db(wb, NEXUS_FILE_DICT)
-manage_dot1q(wb, VCE2VPE_PO, NEXUS_FILE_DICT, VPE_LIST, TRUNK_MAP)
-manage_rb(wb, OSW_LIST)
-manage_static_routes(wb, VCE_FILE_LIST)
-wb.save(filename=OUTPUT_XLS)
+
+def run(site_configs):
+    import re
+
+    OSW2OSW_PO = 'Port-channel' + site_configs[0].portch_OSW_OSW
+    VCE2VPE_PO = 'Port-channel' + site_configs[0].portch_VCE_VPE
+
+    CMD_PATH = site_configs[0].base_dir + site_configs[0].site + "/DATA_SRC/CMD/"
+    AID_PATH = site_configs[0].base_dir + site_configs[0].site  + 'AID/'
+
+    site = site_configs[0].switch
+    m = re.search('([A-Z]{2})OSW(\d\d)', site)
+    site = m.group(1) + m.group(2)
+
+    OUTPUT_XLS = AID_PATH + 'AID_to_{}_NMP.xlsx'.format(site)
+
+    OSW_LIST = []
+    VPE_LIST = []
+    VPE_FILE_LIST = []
+    VCE_FILE_LIST = []
+    NEXUS_FILE_DICT = {}
+    TRUNK_MAP = {}
+    for i in range(0, 2):
+        OSW_LIST.append(site_configs[i].switch)
+        VPE_LIST.append(site_configs[i].vpe_router)
+
+        # trunk_map = {vpe_node: [trunk1, trunk2, ]} where trunks are VPE to OSW trunks by VPE side
+
+        TRUNK_MAP[VPE_LIST[i]] = ['Bundle-Ether' + site_configs[i].portch_OSW_VPE,
+                                   list(site_configs[i].vpeosw_to_vpevce.keys())[0],
+                                   list(site_configs[i].vpeosw_to_vpevce.keys())[1],
+                                   list(site_configs[i].vpeosw_to_vpevce.keys())[2]
+                                 ]
+
+        NEXUS_FILE_DICT[OSW_LIST[i]] = [OSW_LIST[i] + 'VCE.txt',
+                                         OSW_LIST[i] + 'VCE_addendum.txt',
+                                         OSW_LIST[i] + 'VSW.txt',
+                                         VPE_LIST[i] + 'VPE_addendum.txt'
+                                       ]
+
+        VPE_FILE_LIST.append(AID_PATH + VPE_LIST[i] + '.txt')
+    
+        VCE_FILE_LIST.append(AID_PATH + NEXUS_FILE_DICT[OSW_LIST[i]][0])
+
+
+    print(TRUNK_MAP)
+    wb = Workbook()
+    manage_interface_description(wb, OSW_LIST, CMD_PATH)
+    manage_standby_brief(wb, OSW_LIST, CMD_PATH)
+    manage_vrrp_brief(wb, OSW_LIST, CMD_PATH)
+    manage_interface_trunk(wb, OSW_LIST, CMD_PATH)
+    manage_vlan_brief(wb, OSW_LIST, CMD_PATH)
+    manage_nexus_vlan_db(wb, NEXUS_FILE_DICT, OSW_LIST, AID_PATH)
+    manage_dot1q(wb, VCE2VPE_PO, NEXUS_FILE_DICT, VPE_LIST, TRUNK_MAP, OSW_LIST, AID_PATH)
+    manage_rb(wb, OSW_LIST, CMD_PATH)
+    manage_static_routes(wb, VCE_FILE_LIST)
+    wb.save(filename=OUTPUT_XLS)
+
+if __name__ == "__main__":
+    site_configs = get_site_configs(SITES_CONFIG_FOLDER)
+    copy_folder(site_configs)
+    run(site_configs)

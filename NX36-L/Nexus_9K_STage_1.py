@@ -352,10 +352,10 @@ def readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, SHEET, OUTPUT_XLS):
                         access_vlan = get_access_vlan(intf_cfg)
                         row_w[3].value = str(access_vlan)
                     else:
-                        row_w[3].value = 1
+                        row_w[3].value = '1'
                 elif not(intf_obj.has_child_with("switchport mode")) and intf_obj.has_child_with("shutdown"):
                     row_w[2].value = 'ShutDown'
-                    row_w[3].value = 1
+                    row_w[3].value = '1'
 
                 if intf_obj.has_child_with("description"):
                     if description_are_equals(str.strip(str(row_r[5].value)), intf_cfg):
@@ -448,15 +448,6 @@ def run(site_configs):
         create_legendas(OUTPUT_XLS)
         print('End script')
 
-
-def prepare_stage(site_configs):
-    from download_site_commands import get_command
-    from extract_excel import get_excel
-    get_command(site_configs)
-    get_excel(site_configs)
-
-
 if __name__ == "__main__":
     site_configs = get_site_configs(SITES_CONFIG_FOLDER)
-    prepare_stage(site_configs)
     run(site_configs)
