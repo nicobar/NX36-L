@@ -16,10 +16,6 @@ def save_wb(wb, dest_path, file_name):
         os.makedirs(dest_path)
     wb.save(filepath)
 
-#############################################
-################# VARIABLES #################
-#############################################
-
 # +-----0-A------+-----1-B------+------2-C------+---3-D--+---4-E-+-----5-F----+-------6-G---+-------7-H---------+-------8-I-----+-------9-J-----+-------10-K-----+----11-L----+-----12-M-------+---13-N----------+---14-O----------+---15-P----------+
 # +--SRC_OSW_IF--+--DST_VCE_IF--+--Access-Type--+--VLAN--+--QoS--+--Nexus_AP--+--Member/PO--+-----Descr---------+----Duplex-----+-----Speed-----+---Media Type---+---Action---+---Root-Guard---+---System-type---+---Check_Descr---+----Temp---------+
 #                                   |
@@ -229,6 +225,7 @@ def colour_output_xlsx(SHEET, OUTPUT_XLS):
     ws = wb[SHEET]
 
     MAX_COL = ws.max_column - 1
+
     MAX_COLUMN_COLOR = MAX_COL
 
     redFill = PatternFill(start_color='FF0000', end_color='FF0000',
@@ -285,8 +282,8 @@ def readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, SHEET, OUTPUT_XLS):
     wb_w = Workbook()
 
     ws_r = wb_r[SHEET]
-    ws_w = wb_w.create_sheet(index=0, title=SHEET)
-
+    ws_w = wb_w.create_sheet(index = 0, title = SHEET)
+    
     MAX_COL = 15
     MAX_ROW = ws_r.max_row
 

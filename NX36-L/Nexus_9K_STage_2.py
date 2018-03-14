@@ -1,8 +1,10 @@
 from openpyxl import load_workbook
+
 import sys
 sys.path.insert(0, 'utils')
 
 from get_site_data import get_site_configs, SITES_CONFIG_FOLDER, exists
+
 
 def enum(**enums):
     return type('Enum', (), enums)
@@ -123,6 +125,7 @@ def populate_nexus_interfaces(site_config, TYPE, INPUT_XLS, SHEET, BOARD_3K):
             elif len(BOARD_9K[TYPE][SLOT.TWO]['GE-COP']) > 0:
                 row[1].value = BOARD_9K[TYPE][SLOT.TWO]['GE-COP'][-1]
                 BOARD_9K[TYPE][SLOT.TWO]['GE-COP'].pop()
+
             else:
                 print("NO FREE 'GE-COP' INTERFACE ON PX CARDS")
 
