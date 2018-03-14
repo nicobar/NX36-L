@@ -62,10 +62,10 @@ def get_excel(site_configs):
         if not exists(box_config.new_excel_file_paths[1] + box_config.switch + "_DB_MIGRATION.xlsx"):
 
             print("Excel file is about to be extracted in " + box_config.new_excel_file_paths[1] +
-                  box_config.switch + "_DB_MIGRATION.xlsx" ".")
+                  box_config.switch + "_DB_MIGRATION.xlsx" + ".")
 
             if original == None:
-                original = get_excel_sheet(box_config.base_dir + "/Migrazione/Nexus_9k_new_v0.6.xlsx")
+                original = get_excel_sheet(box_config.base_dir + "Migrazione/Nexus_9k_new_v0.6.xlsx")
             new_excel, wb = create_new_excel(box_config.switch)
             new_site_db = Create_Excel([original, new_excel], box_config)
             new_site_db.extract_info()

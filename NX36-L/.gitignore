@@ -1,5 +1,8 @@
 utils/pass.json
 utils/site_config_folder.json
+<<<<<<< HEAD
+=======
 utils/site_config_folder_new.json
+>>>>>>> refs/heads/Dev
 /.project
 /.pydevproject
