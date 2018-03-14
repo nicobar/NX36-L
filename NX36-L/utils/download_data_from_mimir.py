@@ -66,7 +66,9 @@ class Get_Command():
         url = self.base_url + 'config?cpyKey=70293&deviceId=' + str(self.deviceID_osw)
         data = requests.get(url, auth=(self.username, self.password))
         data = json.loads(data.text)
-        return (data["data"][0]["rawData"])
+        for elem in data["data"]:
+            if elem["command"] == "running.config":
+                return elem["rawData"]
 
     def get_running_conf_vpe(self):
         if (self.deviceID_vpe == ""):
@@ -75,7 +77,9 @@ class Get_Command():
         url = self.base_url + 'config?cpyKey=70293&deviceId=' + str(self.deviceID_vpe)
         data = requests.get(url, auth=(self.username, self.password))
         data = json.loads(data.text)
-        return (data["data"][3]["rawData"])
+        for elem in data["data"]:
+            if elem["command"] == "running.config":
+                return elem["rawData"]
 
     def get_cmd(self, cmd):
         if (self.deviceID == ""):
