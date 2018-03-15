@@ -180,11 +180,8 @@ def clean_not_migrated_vlans(voice_vlan, migrating_vlan_lst):
     for vlan in voice_vlan:
         if vlan not in migrating_vlan_lst:
             vlan_to_remove.append(vlan)
-    print(voice_vlan)
-    print(vlan_to_remove)
 
     output = [x for x in voice_vlan if x not in vlan_to_remove]
-    print(output)
     return output
 
 def get_voice_vlan(stp_conf):
