@@ -379,6 +379,10 @@ def create_sheet_for_vpe_tag(ws, vpe_node, vpe_file, trunk_map):
         parse_string += '^interface {}\.|'.format(trunk)
     parse_string = parse_string[:-1]
 
+    print("##########################")
+    print(vpe_file)
+    print(trunk_map)
+
     parse = c.CiscoConfParse(vpe_file)
     obj_list = parse.find_objects(parse_string)
     for obj in obj_list:
@@ -573,12 +577,9 @@ def run(site_configs):
         VPE_LIST.append(site_configs[i].vpe_router)
 
         # trunk_map = {vpe_node: [trunk1, trunk2, ]} where trunks are VPE to OSW trunks by VPE side
-
-        TRUNK_MAP[VPE_LIST[i]] = ['Bundle-Ether' + site_configs[i].portch_OSW_VPE,
-                                   list(site_configs[i].vpeosw_to_vpevce.keys())[0],
-                                   list(site_configs[i].vpeosw_to_vpevce.keys())[1],
-                                   list(site_configs[i].vpeosw_to_vpevce.keys())[2]
-                                 ]
+        if len(list(site_configs[i].vpeosw_to_vpevce.keys())) > 0:
+            TRUNK_MAP[VPE_LIST[i]] = ['Bundle-Ether' + site_configs[i].portch_OSW_VPE,
+                                      list(site_configs[i].vpeosw_to_vpevce.keys())]
 
         NEXUS_FILE_DICT[OSW_LIST[i]] = [OSW_LIST[i] + 'VCE.txt',
                                          OSW_LIST[i] + 'VCE_addendum.txt',
@@ -591,7 +592,6 @@ def run(site_configs):
         VCE_FILE_LIST.append(AID_PATH + NEXUS_FILE_DICT[OSW_LIST[i]][0])
 
 
-    print(TRUNK_MAP)
     wb = Workbook()
     manage_interface_description(wb, OSW_LIST, CMD_PATH)
     manage_standby_brief(wb, OSW_LIST, CMD_PATH)
