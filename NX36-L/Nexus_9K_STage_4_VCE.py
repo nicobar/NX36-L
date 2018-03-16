@@ -205,7 +205,34 @@ def get_voice_vlan(stp_conf):
             output.append(found)
     return output
 
-def get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, VCE_CFG_TXT_IN):
+def check_where_to_place_voice_vlan(voice_vlan, VPE_CFG_TXT, be2po_map):
+    secondary = []
+    primary = []
+    for vlan in voice_vlan:
+        for interface in list(be2po_map.keys()):
+            priority = get_hsrp_pr_from_vpe_conf(VPE_CFG_TXT, interface + '.' + vlan)
+            if priority != None:
+                #print(vlan +': ' + priority)
+                if int(priority) > 99:
+                    primary.append(vlan)
+                else:
+                    secondary.append(vlan)
+    return primary, secondary
+
+def get_hsrp_pr_from_vpe_conf(file_path, sub_int):
+    with open(file_path, encoding="utf-8") as file:
+        config = file.read()
+        config = config.split("!")
+
+        for block in config:
+            import os
+            block = os.linesep.join([s for s in block.splitlines() if s])
+            if sub_int in block:
+                if 'hsrp' in block:
+                    return re.search(r'priority (\d+)', block).group(1)
+    return None
+
+def get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, VCE_CFG_TXT_IN, VPE_CFG_TXT, be2po_map):
 
     map_mac_bridge = {}
 
@@ -229,6 +256,7 @@ def get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, VCE_CFG_TXT_IN):
     mac_address = get_switch_mac_address(CMD_PATH, OSW_SWITCH)
     if mac_address is not None:
         map_mac_bridge[mac_address] = OSW_SWITCH
+
     #print mac_address
     map_vlan_macbridge = get_rb_per_vlan(CMD_PATH, OSW_SWITCH)
     for elem in map_vlan_macbridge:
@@ -240,12 +268,16 @@ def get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, VCE_CFG_TXT_IN):
     migrating_vlan_lst = [vlan for vlan in map_vlan_macbridge if vlan in vlan_tbm_list]
     rb_vlan_lst = [vlan for vlan in migrating_vlan_lst if map_vlan_macbridge[vlan] == OSW_SWITCH]
     srb_vlan_lst = [vlan for vlan in migrating_vlan_lst if map_vlan_macbridge[vlan] is not OSW_SWITCH]
-    rb_vlan_lst.sort(key=natural_keys)
-    srb_vlan_lst.sort(key=natural_keys)
 
+    #addressing spt fro voice vlan
     voice_vlan = get_voice_vlan(stp_conf[0])
     voice_vlan = clean_not_migrated_vlans(voice_vlan, vlan_tbm_list)
-    # TO BE CONTNUE
+    primary, secondary = check_where_to_place_voice_vlan(voice_vlan, VPE_CFG_TXT, be2po_map)
+    rb_vlan_lst.extend(primary)
+    srb_vlan_lst.extend(secondary)
+
+    rb_vlan_lst.sort(key=natural_keys)
+    srb_vlan_lst.sort(key=natural_keys)
 
     # removes all vlans  which do not require spanning tree
     rb_vlan_lst = [x for x in rb_vlan_lst if x not in vlan_without_spt]
@@ -416,7 +448,6 @@ def create_dir(dest_path):
     if not os.path.exists(dest_path):
         os.makedirs(dest_path)
 
-
 def copy_file(source_file, dest_file, dest_path):
     import shutil
     if not exists(source_file):
@@ -540,7 +571,7 @@ def run(site_configs):
 
         print('Script Starts')
         po_vce_cfg_list = get_po_vce(VPE_CFG_TXT, VCE_CFG_TXT_IN, new_po, be2po_map)
-        stp_cfg_list = get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, VCE_CFG_TXT_IN)
+        stp_cfg_list = get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, VCE_CFG_TXT_IN, VPE_CFG_TXT, be2po_map)
         svi_conf_list = get_801_802_svi(OSW_CFG_TXT)
         po700_conf = get_po_vce_vce_700(OSW_CFG_TXT, PO_OSW_MATE, VCE_CFG_TXT_IN)
         po301_conf, po1000_conf = get_po_vce_vsw1_301_and_1000(VSW_CFG_TXT_IN)

@@ -256,7 +256,6 @@ def manage_dot1q(wb, vce2vpe_po, nexus_file_dict, vpe_list, trunk_map, OSW_LIST,
                      AID_PATH + vpe_list[1] + '.txt']
     vpefile_to_sheet_dict = {vpe_file_list[0]: 'dot1q_tag_on_VPE1',
                              vpe_file_list[1]: 'dot1q_tag_on_VPE2'}
-    print(vpe_file_list)
 
     for nexus_file in vceaddfile_to_sheet_dict.keys():
         VCE_CFG_TXT_IN = AID_PATH + nexus_file
