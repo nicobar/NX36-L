@@ -32,7 +32,7 @@ def create_if_subif_map(VPE_CFG_TXT, be2po_map):
     for int_obj in int_obj_list:
         sub_list = int_obj.text.split('.')
         if sub_list[0] in be2po_map:
-            print(sub_list[0])
+            #print(sub_list[0])
             if len(sub_list) == 2:
                 mymap.setdefault(sub_list[0], list()).append(sub_list[1])
             elif len(sub_list) == 1:
@@ -51,7 +51,6 @@ def get_vlan_to_be_migrated(VCE_CFG_TXT_IN):
         vlan_list.append(v.split()[1])
 
     return vlan_list
-
 
 def get_vlan_string(mylist, my_vlan_tbm):
 
@@ -100,7 +99,7 @@ def get_po_vce(VPE_CFG_TXT, VCE_CFG_TXT_IN, new_po, be2po_map):
 
     vlan_tbm = get_vlan_to_be_migrated(VCE_CFG_TXT_IN)
 
-    check_vlan_consistency(if_subif_map, vlan_tbm)
+    #check_vlan_consistency(if_subif_map, vlan_tbm)
 
     real_vlan_tbm = get_vlan_string(if_subif_map.values(), vlan_tbm)
 
@@ -161,14 +160,12 @@ def get_rb_per_vlan(CMD_PATH, OSW_SWITCH):
             continue
     return mp
 
-
 def time_string():
     # This function returns time in DDMMYYYY format
     ### package time
 
     tempo = time.gmtime()
     return str(tempo[2]) + str(tempo[1]) + str(tempo[0])
-
 
 def from_file_to_cfg_as_list(file_name):
     ''' return a list containing text of file_name '''
@@ -178,6 +175,35 @@ def from_file_to_cfg_as_list(file_name):
         show_cmd.append(elem.rstrip())
     return show_cmd
 
+def clean_not_migrated_vlans(voice_vlan, migrating_vlan_lst):
+    vlan_to_remove = []
+    for vlan in voice_vlan:
+        if vlan not in migrating_vlan_lst:
+            vlan_to_remove.append(vlan)
+
+    output = [x for x in voice_vlan if x not in vlan_to_remove]
+    return output
+
+def get_voice_vlan(stp_conf):
+    m = re.search('no spanning-tree vlan (.+)', stp_conf)
+    found = ''
+    output = []
+    if m:
+        found = m.group(1)
+    if ',' in found:
+        groups = str(found).split(',')
+        for vlan_range in groups:
+            if '-' in vlan_range:
+                for x in from_range_to_list(vlan_range):
+                    output.append(x)
+            else:
+                output.append(vlan_range)
+    else:
+        if '-' in found:
+            output.append(','.join(from_range_to_list(found)))
+        else:
+            output.append(found)
+    return output
 
 def get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, VCE_CFG_TXT_IN):
 
@@ -187,8 +213,9 @@ def get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, VCE_CFG_TXT_IN):
 
     #stp_conf = parse.find_lines(r'^spanning-tree vlan|^no spanning-tree vlan' )
     stp_conf = parse.find_lines(r'^no spanning-tree vlan')
+
     #comment this line
-    stp_conf[0] = '!' + stp_conf[0]
+    stp_conf[0] = '! ' + stp_conf[0]
 
     # insert vlan similar to 4093 without spanning-tree
     import json
@@ -215,6 +242,10 @@ def get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, VCE_CFG_TXT_IN):
     srb_vlan_lst = [vlan for vlan in migrating_vlan_lst if map_vlan_macbridge[vlan] is not OSW_SWITCH]
     rb_vlan_lst.sort(key=natural_keys)
     srb_vlan_lst.sort(key=natural_keys)
+
+    voice_vlan = get_voice_vlan(stp_conf[0])
+    voice_vlan = clean_not_migrated_vlans(voice_vlan, vlan_tbm_list)
+    # TO BE CONTNUE
 
     # removes all vlans  which do not require spanning tree
     rb_vlan_lst = [x for x in rb_vlan_lst if x not in vlan_without_spt]
@@ -340,15 +371,13 @@ def get_po_vce_vsw1_301_and_1000(VSW_CFG_TXT_IN):
 
     return po_301_tot, po_1000_tot
 
-
 def write_cfg(conf_list, VCE_CFG_TXT_OUT):
     ''' write conf_list on a file whom file_name contains device '''
-    print(VCE_CFG_TXT_OUT)
+    #print(VCE_CFG_TXT_OUT)
     f = open(VCE_CFG_TXT_OUT, 'w+')
     for line in conf_list:
         f.write(line + '\n')
     f.close()
-
 
 def copy_folder(site_configs):
 
@@ -516,8 +545,8 @@ def run(site_configs):
         po700_conf = get_po_vce_vce_700(OSW_CFG_TXT, PO_OSW_MATE, VCE_CFG_TXT_IN)
         po301_conf, po1000_conf = get_po_vce_vsw1_301_and_1000(VSW_CFG_TXT_IN)
         vce_conf = ['!'] + stp_cfg_list + ['!'] + po_vce_cfg_list + ['!'] + po700_conf + ['!'] + po1000_conf + ['!'] + po301_conf + ['!'] + svi_conf_list + ['!']
-        for elem in vce_conf:
-            print(elem)
+        #for elem in vce_conf:
+        #    print(elem)
         write_cfg(vce_conf, VCE_CFG_TXT_OUT)
         #save also in final folder
         final_folder = box_config.base_dir + box_config.site + "FINAL/" + OSW_SWITCH + 'VCE_addendum.txt'

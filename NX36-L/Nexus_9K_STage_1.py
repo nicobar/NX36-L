@@ -398,7 +398,6 @@ def readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, SHEET, OUTPUT_XLS, box_confi
     wb_w.save(filename=OUTPUT_XLS)
     print("End F1")
 
-
 def VlanProblem():
     try:
         raise ValueError('Vlan lower than 4000 is on the same trunk of Vlan 4000!')
