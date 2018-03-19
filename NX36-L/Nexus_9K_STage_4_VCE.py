@@ -584,7 +584,6 @@ def run(site_configs):
         write_cfg(vce_conf, final_folder)
         print('Script Ends')
 
-
 if __name__ == "__main__":
     site_configs = get_site_configs(SITES_CONFIG_FOLDER)
     copy_folder(site_configs)
