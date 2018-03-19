@@ -386,11 +386,11 @@ def readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, SHEET, OUTPUT_XLS, box_confi
                   box_config.switch + '_vlan_similar_to_4093.txt') as f:
             vlan_without_spt = json.load(f)
 
+        # Copy vlan lower than 3900
         for vlan_no_spt in vlan_without_spt:
             vlans_in_excel = str(row_w[3].value).split(',')
             if vlan_no_spt in vlans_in_excel:
                 for vlan in vlans_in_excel:
-                    #if int(vlan) < 3900 and row_w[5].value != 'Infra':
                     if int(vlan) < 3900:
                         VlanProblem(row_w[0].value, box_config.switch)
                 row_w[12].value = "No"
@@ -401,8 +401,8 @@ def readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, SHEET, OUTPUT_XLS, box_confi
 
 def VlanProblem(interface, box):
     try:
-        raise ValueError('Vlan lower than 4000 is on the same trunk '
-                         'of Vlan 4000 on: ' + interface + ' on ' + box)
+        raise ValueError('Vlan lower than 3900 is on the same trunk '
+                         'of a Vlan similar to 4000 on: ' + interface + ' on ' + box)
         raise Exception('VlanProblem')
     except Exception as error:
         raise
