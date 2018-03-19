@@ -565,7 +565,7 @@ def run(site_configs):
     m = re.search('([A-Z]{2})OSW(\d\d)', site)
     site = m.group(1) + m.group(2)
 
-    OUTPUT_XLS = AID_PATH + 'AID_to_{}_NMP.xlsx'.format(site)
+    OUTPUT_XLS = AID_PATH + 'AID_to_{}_NMP_PARTIAL.xlsx'.format(site)
 
     OSW_LIST = []
     VPE_LIST = []

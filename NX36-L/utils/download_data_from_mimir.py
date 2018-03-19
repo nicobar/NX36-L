@@ -107,6 +107,11 @@ def check_vlan_similar_to_4093(output_command, box_config):
                     if 'standby' in block:
                         vlans_id = re.search(r'interface Vlan(4\d{3})', block).group(1)
                         vlans_with_spanning_tree.append(vlans_id)
+            if block.startswith('interface Vlan39'):
+                if re.search(r'interface Vlan39\d{2}', block):
+                    if 'standby' in block:
+                        vlans_id = re.search(r'interface Vlan(39\d{2})', block).group(1)
+                        vlans_with_spanning_tree.append(vlans_id)
 
         base_dir = box_config.base_dir + box_config.site
         if not os.path.exists(base_dir + "DATA_SRC/CMD/"):

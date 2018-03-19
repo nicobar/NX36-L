@@ -214,7 +214,7 @@ def add_vrrpvip_to_hsrp_cfg(cfg, OSW_CFG_TXT):
                 testo += obj.ioscfg + ['!']
                                 
                         
-    print (testo)
+    #print (testo)
     return testo
 
 def write_cfg(conf_list, VPE_CFG_TXT_OUT):
