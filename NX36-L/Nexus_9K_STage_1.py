@@ -390,17 +390,19 @@ def readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, SHEET, OUTPUT_XLS, box_confi
             vlans_in_excel = str(row_w[3].value).split(',')
             if vlan_no_spt in vlans_in_excel:
                 for vlan in vlans_in_excel:
-                    if int(vlan) < 4000:
-                        VlanProblem()
+                    #if int(vlan) < 3900 and row_w[5].value != 'Infra':
+                    if int(vlan) < 3900:
+                        VlanProblem(row_w[0].value, box_config.switch)
                 row_w[12].value = "No"
             else:
                 row_w[12].value = str(row_r[11].value)
     wb_w.save(filename=OUTPUT_XLS)
     print("End F1")
 
-def VlanProblem():
+def VlanProblem(interface, box):
     try:
-        raise ValueError('Vlan lower than 4000 is on the same trunk of Vlan 4000!')
+        raise ValueError('Vlan lower than 4000 is on the same trunk '
+                         'of Vlan 4000 on: ' + interface + ' on ' + box)
         raise Exception('VlanProblem')
     except Exception as error:
         raise
