@@ -112,13 +112,10 @@ def fill_vrrp_excel(final, ws):
    for vlan in final:
        k = 0
        cell = "{}{}".format(cols[k], row)
-       print(cell)
        ws[cell] = vlan
        for data in final[vlan]:
            k = k + 1
            cell = "{}{}".format(cols[k], row)
-           print(cell)
-
            ws[cell].value = data
        row = row + 1
 
@@ -127,6 +124,14 @@ def run(site_configs):
 
     AID_PATH = site_configs[0].base_dir + site_configs[0].site + 'AID/'
     EXCEL_SRC = site_configs[0].base_dir + site_configs[0].site + 'DATA_SRC/XLS/OUTPUT_STAGE_2.0/'
+    CMD_PATH = site_configs[0].base_dir + site_configs[0].site + 'DATA_SRC/CMD/' + \
+               site_configs[0].switch + '_show_vrrp_brief.txt'
+
+    CFG_PATH_VCE = site_configs[0].base_dir + site_configs[0].site + 'AID/' + \
+                   site_configs[0].switch + 'VCE.txt'
+
+    CFG_PATH_OSW = site_configs[0].base_dir + site_configs[0].site + 'DATA_SRC/CFG/' + \
+                   site_configs[0].switch + '.txt'
 
     site = site_configs[0].switch
     m = re.search('([A-Z]{2})OSW(\d\d)', site)
@@ -137,7 +142,7 @@ def run(site_configs):
 
     migration_table = openpyxl.Workbook()
 
-    #########VRRP#######################
+    #########  VRRP SHEET  #######################
     vrrp = get_excel_sheet(site_configs[0].base_dir + "Migrazione/XXX_MIGRATION_TABLES.xlsx",  'XXX VRRP VIP & STATIC')
 
     sheet = '{} VRRP VIP & STATIC'.format(site)
@@ -148,31 +153,37 @@ def run(site_configs):
     ws[cell] = 'Statiche traffico intra-sito'
     copy_sheet(ws, vrrp, 'F', 7, 8)
 
-    CMD_PATH = site_configs[0].base_dir + site_configs[0].site + 'DATA_SRC/CMD/' + \
-               site_configs[0].switch + '_show_vrrp_brief.txt'
-
-    CFG_PATH_VCE = site_configs[0].base_dir + site_configs[0].site + 'AID/' + \
-                site_configs[0].switch + 'VCE.txt'
-
-    CFG_PATH_OSW = site_configs[0].base_dir + site_configs[0].site + 'DATA_SRC/CFG/' + \
-                site_configs[0].switch + '.txt'
-
     vlans = parse_vrrp(CMD_PATH)
     if len(vlans) > 0:
         vrrp_vlans = check_vlan(vlans, CFG_PATH_VCE)
 
         final = get_subnet_for_non_static(vrrp_vlans, CFG_PATH_OSW)
-        #for vlan in final:
-        #    print(vlan)
-        #    print(final[vlan])
         fill_vrrp_excel(final, ws)
 
 
+    ####### STATIC ROUTE SHEET ##################
+    sheet = 'Static Routes (OSW)'
+    ws = migration_table.create_sheet(sheet)
+
+    ####### VOICE VLAN ROUTE SHEET ##################
+    sheet = '{} Voice VLAN'.format(site)
+    ws = migration_table.create_sheet(sheet)
 
     migration_table.save(filename=OUTPUT_XLS)
     exit(0)
 
-    #########COPIA FOGLI AID - NON FUNGE #######################
+
+    #########COPY SHEET INTERFACE #######################
+    for site_config in site_configs:
+        INPUT_XLS = EXCEL_SRC + '{}_OUT_DB_OPT.xlsx'.format(site_config.switch)
+        int_xls = openpyxl.load_workbook(INPUT_XLS)
+        int_sheet = int_xls
+        sheet = '{}_IF'.format(site_config.switch)
+        int_sheet = int_xls[site_config.switch]
+        ws = migration_table.create_sheet(sheet)
+        copy_sheet(ws, int_sheet, 'A', 1, NUMBER_OF_INTTERFACES)
+
+    #########COPIA SHEET AID - DOES NOT WORK #######################
 
     matrix_sheet = 'VLAN_Migration_Matrix'
     stp_sheet = 'Higher STP Cost IF'
@@ -183,35 +194,12 @@ def run(site_configs):
     VLAN_Migration_Matrix = aid_file_xls[matrix_sheet]
 
     ws = migration_table.create_sheet(matrix_sheet)
-    #this copy does not work
-    #copy_sheet(ws, VLAN_Migration_Matrix, 'E', 4, VLAN_NUMBER)
+    # this copy does not work
+    # copy_sheet(ws, VLAN_Migration_Matrix, 'E', 4, VLAN_NUMBER)
     ws = migration_table.create_sheet(stp_sheet)
-    #copy_sheet(ws, STP_Cost, 'D', 6, VLAN_NUMBER)
+    # copy_sheet(ws, STP_Cost, 'D', 6, VLAN_NUMBER)
 
-    #########COPIA INTERFACCE#######################
-    for site_config in site_configs:
-        INPUT_XLS = EXCEL_SRC + '{}_OUT_DB_OPT.xlsx'.format(site_config.switch)
-        int_xls = openpyxl.load_workbook(INPUT_XLS)
-        int_sheet = int_xls
-        sheet = '{}_IF'.format(site_config.switch)
-        int_sheet = int_xls[site_config.switch]
-        ws = migration_table.create_sheet(sheet)
-        copy_sheet(ws, int_sheet, 'A', 1, NUMBER_OF_INTTERFACES)
-
-    '''
-    vce1_cell = "{}{}".format("B", "1")
-    vce2_cell = "{}{}".format("B", "2")
-    osw1_cell = "{}{}".format("B", "3")
-    ows2_cell = "{}{}".format("B", "4")
-    po69_1_cell = "{}{}".format("D", "1")
-    po69_2_cell = "{}{}".format("D", "2")
-    STP_Cost[vce1_cell].value = site_configs[0].vpe_router
-    STP_Cost[vce2_cell].value = site_configs[1].vpe_router
-    STP_Cost[osw1_cell].value = site_configs[1].switch
-    STP_Cost[ows2_cell].value = site_configs[1].switch
-    STP_Cost[po69_1_cell].value = site_configs[0].vpe_router + '-' + site_configs[0].switch
-    STP_Cost[po69_2_cell].value =  site_configs[1].vpe_router + '-' + site_configs[1].switch
-   
+    '''   
     ws = aid_file_xls.create_sheet(matrix_sheet)
     copy_sheet(ws, VLAN_Migration_Matrix, matrix_sheet)
     ws = aid_file_xls.create_sheet(stp_sheet)
