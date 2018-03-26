@@ -62,8 +62,21 @@ def create_vlan_voice_line(site_configs, ws):
                 else:
                     for k in range(1, len(voice_vlans[voice_vlan])):
                         output[voice_vlan][k] = output[voice_vlan][k] + " " + voice_vlans[voice_vlan][k]
-    row = 5
+
+    cell = "{}{}".format("E", "5")
+    ws[cell] = 'VLAN ID'
+    cell = "{}{}".format("F", "5")
+    ws[cell] = 'VLAN NAME'
+    cell = "{}{}".format("G", "5")
+    ws[cell] = 'Edge Port'
+    cell = "{}{}".format("H", "5")
+    ws[cell] = 'HSRP ACTIVE'
+    cell = "{}{}".format("I", "5")
+    ws[cell] = 'Set Root Bridge'
+
+    row = 6
     cols = ['E','F','G', 'H', 'I']
+
     for vlan in output:
         k = 0
         cell = "{}{}".format(cols[k], row)

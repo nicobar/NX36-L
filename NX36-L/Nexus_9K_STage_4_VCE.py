@@ -241,6 +241,24 @@ def get_hsrp_pr_from_vpe_conf(file_path, sub_int):
                     return re.search(r'priority (\d+)', block).group(1)
     return None
 
+def get_voice_vlan_access_int(voice_vlan, osw):
+    import re
+    with open(osw, encoding="utf-8") as file:
+        config = file.read()
+        config = config.split("!")
+        int_list = []
+        for block in config:
+            import os
+            block = os.linesep.join([s for s in block.splitlines() if s])
+            if block.startswith('interface'):
+                number = re.search(r'switchport access vlan (\d+)', block)
+                if number:
+                    vlans_id = number.group(1)
+                    if vlans_id == voice_vlan:
+                        interface = re.search(r'interface (.+)\n', block).group(1)
+                        int_list.append(interface[:-1])
+    return  int_list
+
 def get_voice_vlan_info(voice_vlans, osw, OSW_SWITCH):
     import re
     with open(osw, encoding="utf-8") as file:
@@ -260,7 +278,11 @@ def get_voice_vlan_info(voice_vlans, osw, OSW_SWITCH):
                             if 'name' in line:
                                 name = re.search(r'name (\w.+)', line).group(1)
                                 vlan_dict[vlans_id] = [name]
-                                vlan_dict[vlans_id].append('XX on ' + OSW_SWITCH)
+                                access_vlan_int = get_voice_vlan_access_int(vlans_id, osw)
+                                interfaces = ''
+                                for int in access_vlan_int:
+                                    interfaces = interfaces + ' ' + int
+                                vlan_dict[vlans_id].append(interfaces + ' on ' + OSW_SWITCH)
     return vlan_dict
 
 
