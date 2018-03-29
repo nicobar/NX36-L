@@ -8,9 +8,9 @@ def get_remote_cmd(node_name, cmd, fname):
     SITE = 'PA01'
     BASE_DIR = '/mnt/hgfs/VM_shared/VF-2017/NMP/' + SITE + '/DATA_SRC/CMD/'
     BRIDGE_NAME = '10.192.10.8'
-    MyUsername = 'zzasp70'
-    MyBridgePwd = 'SPr0!094'
-    MyTacacsPwd = '0094spRA_'
+    MyUsername = 'XXXXXX'
+    MyBridgePwd = 'XXXXXX'
+    MyTacacsPwd = 'XXXXXX'
 
     cmd_ssh_bridge = 'ssh -y ' + MyUsername + '@' + BRIDGE_NAME
 

@@ -286,7 +286,7 @@ def get_voice_vlan_info(voice_vlans, osw, OSW_SWITCH):
     return vlan_dict
 
 
-def get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, VCE_CFG_TXT_IN, VPE_CFG_TXT, be2po_map, VPE_ROUTER, base_dir):
+def get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, OTHER_OSW,VCE_CFG_TXT_IN, VPE_CFG_TXT, be2po_map, VPE_ROUTER, base_dir):
 
     map_mac_bridge = {}
 
@@ -308,8 +308,11 @@ def get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, VCE_CFG_TXT_IN, VPE_CFG_TXT,
         stp_conf.append('!')
 
     mac_address = get_switch_mac_address(CMD_PATH, OSW_SWITCH)
+    mac_address_other = get_switch_mac_address(CMD_PATH, OTHER_OSW)
     if mac_address is not None:
         map_mac_bridge[mac_address] = OSW_SWITCH
+    if mac_address_other is not None:
+        map_mac_bridge[mac_address_other] = OTHER_OSW
 
     #print mac_address
     map_vlan_macbridge = get_rb_per_vlan(CMD_PATH, OSW_SWITCH)
@@ -317,13 +320,17 @@ def get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, VCE_CFG_TXT_IN, VPE_CFG_TXT,
         if map_vlan_macbridge[elem] == mac_address:
             map_vlan_macbridge[elem] = map_mac_bridge[mac_address]
         else:
-            continue
+            if map_vlan_macbridge[elem] == mac_address_other:
+                map_vlan_macbridge[elem] = map_mac_bridge[mac_address_other]
+            else:
+                continue
+
     vlan_tbm_list = get_vlan_to_be_migrated(VCE_CFG_TXT_IN)
     migrating_vlan_lst = [vlan for vlan in map_vlan_macbridge if vlan in vlan_tbm_list]
     rb_vlan_lst = [vlan for vlan in migrating_vlan_lst if map_vlan_macbridge[vlan] == OSW_SWITCH]
-    srb_vlan_lst = [vlan for vlan in migrating_vlan_lst if map_vlan_macbridge[vlan] is not OSW_SWITCH]
+    srb_vlan_lst = [vlan for vlan in migrating_vlan_lst if map_vlan_macbridge[vlan] == OTHER_OSW]
 
-    #addressing spt for voice vlan
+    #addressing spt for voice vlan+
     voice_vlan = get_voice_vlan(stp_conf[0])
     voice_vlan = clean_not_migrated_vlans(voice_vlan, vlan_tbm_list)
     voice_vlan_dict = get_voice_vlan_info(voice_vlan, OSW_CFG_TXT, OSW_SWITCH)
@@ -612,6 +619,7 @@ def run(site_configs):
         PO_OSW_MATE = 'Port-channel' + box_config.portch_OSW_OSW
 
         OSW_SWITCH = box_config.switch
+        OTHER_OSW = box_config.other_switch
         VSW_SWITCH = box_config.vsw_switch
         VPE_ROUTER = box_config.vpe_router
         VCE_SWITCH = box_config.vce_switch
@@ -627,7 +635,7 @@ def run(site_configs):
 
         print('Script Starts')
         po_vce_cfg_list = get_po_vce(VPE_CFG_TXT, VCE_CFG_TXT_IN, new_po, be2po_map)
-        stp_cfg_list = get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, VCE_CFG_TXT_IN,
+        stp_cfg_list = get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, OTHER_OSW, VCE_CFG_TXT_IN,
                                     VPE_CFG_TXT, be2po_map, VPE_ROUTER, box_config.base_dir + box_config.site)
         svi_conf_list = get_801_802_svi(OSW_CFG_TXT)
         po700_conf = get_po_vce_vce_700(OSW_CFG_TXT, PO_OSW_MATE, VCE_CFG_TXT_IN)
