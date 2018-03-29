@@ -182,7 +182,7 @@ def fill_static_route(site_configs, ws):
             static_block = config[static_pos:]
             static_block = static_block.split("\n")
 
-            for line in static_block[2:]:
+            for line in static_block[1:]:
                 import os
                 line = os.linesep.join([s for s in line.splitlines() if s])
                 if 'ip route' in line:
@@ -214,11 +214,9 @@ def remove_static_from_final(site_configs):
             static_pos = config.find('####')
             clean_config = config[0:static_pos]
 
-
         with open(vce, 'w') as f:
            f.write(clean_config)
            f.close()
-
 
 def fill_vrrp_excel(final, ws):
    row = 8
@@ -273,7 +271,7 @@ def run(site_configs):
     site = m.group(1) + m.group(2)
 
     INPUT_XLS = AID_PATH + 'AID_to_{}_NMP.xlsx'.format(site)
-    OUTPUT_XLS = FINAL_PATH + '{}_MIGRAZIONE_TABLES.xlsx'.format(site)
+    OUTPUT_XLS = FINAL_PATH + '{}_Migration_Tables.xlsx'.format(site)
 
     migration_table = openpyxl.Workbook()
 
