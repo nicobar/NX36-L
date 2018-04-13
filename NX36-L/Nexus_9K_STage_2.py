@@ -183,6 +183,8 @@ def populate_nexus_interfaces(site_config, TYPE, INPUT_XLS, SHEET, BOARD_3K):
 
     print('End Stage_2 script')
 
+def foo():
+    pass
 
 def create_dir(dest_path):
     import os
@@ -191,18 +193,19 @@ def create_dir(dest_path):
 
 def copy_file(site_config, source_path, dest_path):
     import shutil
-    src_file = source_path + site_config.switch + "_checked_v" + str(site_config.checked_version) + ".0_OUT_DB_OPT.XLSX"
+    src_file = source_path + site_config.switch + "_checked_v" + str(site_config.checked_version) + "_OUT_DB_OPT.XLSX"
     dst_file = dest_path + site_config.switch + "_OUT_DB_OPT.XLSX"
     create_dir(dest_path)
     shutil.copy(src_file, dst_file)
 
 def create_folder(site_configs):
     for site_config in site_configs:
-        source_path = site_config.base_dir + site_config.site + "/DATA_SRC/XLS/OUTPUT_STAGE_1.5/"
+        # Site_config.checked_version has to be in the format x.y
+        source_path = site_config.base_dir + site_config.site + "DATA_SRC/XLS/OUTPUT_STAGE_1.5/"
         if not exists(source_path + site_config.switch + "_checked_v"
-                      + str(site_config.checked_version) + ".0_OUT_DB_OPT.XLSX"):
+                      + str(site_config.checked_version) + "_OUT_DB_OPT.XLSX"):
             print("File " + source_path + site_config.switch + "_checked_v"
-                      + str(site_config.checked_version) + ".0_OUT_DB_OPT.XLSX" + " is missing.\nPlease create it.")
+                      + str(site_config.checked_version) + "_OUT_DB_OPT.XLSX" + " is missing.\nPlease create it.")
             exit(0)
         dest_path = site_config.base_dir + site_config.site + site_config.switch + "/Stage_2/"
         copy_file(site_config, source_path, dest_path)
