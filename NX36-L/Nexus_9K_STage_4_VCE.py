@@ -259,6 +259,7 @@ def get_voice_vlan_access_int(voice_vlan, osw):
                         int_list.append(interface[:-1])
     return  int_list
 
+#this function creates the dictionary used in the final migration table
 def get_voice_vlan_info(voice_vlans, osw, OSW_SWITCH):
     import re
     with open(osw, encoding="utf-8") as file:
