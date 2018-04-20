@@ -132,6 +132,20 @@ def replace_vlan4093(output_command, box_config):
 def check_cfg(box_config):
 
     credentials = open_file(os.path.dirname(os.path.realpath(__file__)) + "/pass.json")
+
+    if exists(box_config.conf_dest_path[1] + box_config.switch + '.txt'):
+        print("Config file is already in place in " + box_config.conf_dest_path[1] +
+              box_config.switch + '.txt' + ".")
+        if not exists(box_config.conf_dest_path[0] + box_config.switch + ".txt"):
+            # copies the file in Stage1 folder
+            source = box_config.conf_dest_path[1] + box_config.switch + ".txt"
+            dest = box_config.conf_dest_path[0] + box_config.switch + ".txt"
+            if not os.path.exists(box_config.conf_dest_path[0]):
+                os.makedirs(box_config.conf_dest_path[0])
+            shutil.copy(source, dest)
+            print("-> Copied in " + box_config.conf_dest_path[1] +
+                  box_config.switch + '.txt' + ".")
+
     if not exists(box_config.conf_dest_path[1] + box_config.switch + '.txt'):
         print("Config file is about to be downloaded in " + box_config.conf_dest_path[1] +
               box_config.switch + '.txt' + ".")
@@ -146,17 +160,6 @@ def check_cfg(box_config):
             save_result(output_command, box, box_config.switch)
 
         print("Config file has been downloaded for " + box_config.switch + ".")
-
-    if exists(box_config.conf_dest_path[1] + box_config.switch + '.txt'):
-        print("Config file is already in place in " + box_config.conf_dest_path[1] +
-              box_config.switch + '.txt' + ".")
-        if not exists(box_config.conf_dest_path[0] + box_config.switch + ".txt"):
-            # copies the file in Stage1 folder
-            source = box_config.conf_dest_path[1] + box_config.switch + ".txt"
-            dest = box_config.conf_dest_path[0] + box_config.switch + ".txt"
-            shutil.copy(source, dest)
-            print("-> Copied in " + box_config.conf_dest_path[1] +
-                  box_config.switch + '.txt' + ".")
 
     ############VPE
     if not exists(box_config.conf_dest_path[1] + box_config.vpe_router + '.txt'):

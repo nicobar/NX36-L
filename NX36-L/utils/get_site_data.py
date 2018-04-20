@@ -19,7 +19,6 @@ SITES_CONFIG_FOLDER = config_path['path']
 
 # this function reads the folders name in a folder
 
-
 def read_files_name(site_folder):
     for file_path in os.listdir(site_folder):
         box_name = file_path.split(".")[0]
