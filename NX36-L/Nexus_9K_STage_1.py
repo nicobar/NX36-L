@@ -472,7 +472,7 @@ def run(site_configs):
         print('End script')
 
 #copies config and excel files in Stage_1 folder from DATA_SRC folder
-def create_folder(box_configs):
+def copy_files(box_configs):
     import shutil
     import os
     for box_config in box_configs:
@@ -496,5 +496,5 @@ def create_folder(box_configs):
 
 if __name__ == "__main__":
     site_configs = get_site_configs(SITES_CONFIG_FOLDER)
-    create_folder(site_configs)
+    copy_files(site_configs)
     run(site_configs)
