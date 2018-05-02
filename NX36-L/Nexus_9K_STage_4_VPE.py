@@ -148,7 +148,7 @@ def get_router_hsrp(vpeosw_2_vpevce_map, VPE_CFG_TXT, be2po_map, VCE_CFG_TXT_IN)
     
     #if_obj_list = parse2.find_objects('Ether')
     #if_obj_list = parse2.find_objects(r'^ ' + OLD_BE + '.+')
-    search_string_list = [ l + '.+' for l in be2po_map ]
+    search_string_list = [ l + '\..+' for l in be2po_map ]
     search_string = '|'.join(search_string_list) 
     
     
