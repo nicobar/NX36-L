@@ -256,7 +256,7 @@ def get_voice_vlan_access_int(voice_vlan, osw):
                     vlans_id = number.group(1)
                     if vlans_id == voice_vlan:
                         interface = re.search(r'interface (.+)\n', block).group(1)
-                        int_list.append(interface[:-1])
+                        int_list.append(interface.split('\r')[0])
     return  int_list
 
 #this function creates the dictionary used in the final migration table
