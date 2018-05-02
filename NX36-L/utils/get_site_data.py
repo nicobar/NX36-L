@@ -30,10 +30,10 @@ def get_site_configs(site_folder):
     site_name = read_files_name(site_folder)
     site_name = site_name + '/'
     box_configs = []
-    for site_config_file in os.listdir(site_folder + site_name):
+    for site_config_file in os.listdir(site_folder + "/" + site_name):
         # the .json file is the site's cfg file, other files could be reside there as note files
         if '.json' in site_config_file:
-            site_data = open_file(site_folder + site_name + site_config_file)
+            site_data = open_file(site_folder + site_name + "/" +site_config_file)
             for box_config in site_data:
                 box_configs.append(SiteConfig(box_config))
     return box_configs
