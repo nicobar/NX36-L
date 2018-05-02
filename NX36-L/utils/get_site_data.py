@@ -59,7 +59,7 @@ class SiteConfig():
                                      "DATA_SRC/XLS/INPUT_STAGE_1/"]
         self.conf_dest_path = [self.base_dir +
                                self.site + self.switch + "/Stage_1/",
-                               self.base_dir + self.site + "DATA_SRC/CFG/"]
+                              self.base_dir + self.site + "DATA_SRC/CFG/"]
         self.portch_VCE_VPE = site_config["portch_VCE_VPE"]
         self.vce_switch = site_config["vce_switch"]
         self.vpe_router = site_config["vpe_router"]

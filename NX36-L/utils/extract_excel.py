@@ -1,4 +1,3 @@
-import json
 from copy import copy
 import openpyxl
 from get_site_data import get_site_configs, exists, SITES_CONFIG_FOLDER
@@ -70,18 +69,12 @@ def get_excel(site_configs):
             new_site_db = Create_Excel([original, new_excel], box_config)
             new_site_db.extract_info()
 
-            for box in box_config.new_excel_file_paths:
-                save_wb(wb, box, box_config.switch + "_DB_MIGRATION.xlsx")
+            #for box in box_config.new_excel_file_paths:
+            save_wb(wb, box_config.new_excel_file_paths[1], box_config.switch + "_DB_MIGRATION.xlsx")
 
             print("Excel file has been extracted for " + box_config.switch + ".")
         else:
             print("Excel file is already in place in " + box_config.new_excel_file_paths[1] +
-                  box_config.switch + "_DB_MIGRATION.xlsx" ".")
-            # copies the file in Stage1 folder
-            source = box_config.new_excel_file_paths[1] + box_config.switch + "_DB_MIGRATION.xlsx"
-            dest = box_config.new_excel_file_paths[0] + box_config.switch + "_DB_MIGRATION.xlsx"
-            shutil.copy(source, dest)
-            print("-> Copied in " + box_config.new_excel_file_paths[0] +
                   box_config.switch + "_DB_MIGRATION.xlsx" ".")
 
 #if __name__ == "__main__":

@@ -471,6 +471,30 @@ def run(site_configs):
         create_legendas(OUTPUT_XLS)
         print('End script')
 
+#copies config and excel files in Stage_1 folder from DATA_SRC folder
+def copy_files(box_configs):
+    import shutil
+    import os
+    for box_config in box_configs:
+
+        # copies config files  in Stage1 folder
+        source = box_config.conf_dest_path[1] + box_config.switch + ".txt"
+        dest = box_config.conf_dest_path[0] + box_config.switch + ".txt"
+        if not os.path.exists(box_config.conf_dest_path[0]):
+            os.makedirs(box_config.conf_dest_path[0])
+        shutil.copy(source, dest)
+        print(box_config.switch + ".txt copied in " + box_config.conf_dest_path[1] +
+              box_config.switch + '.txt' + ".")
+
+        # copies excel files  in Stage1 folder
+        source = box_config.new_excel_file_paths[1] + box_config.switch + "_DB_MIGRATION.xlsx"
+        dest = box_config.new_excel_file_paths[0] + box_config.switch + "_DB_MIGRATION.xlsx"
+        shutil.copy(source, dest)
+        print(box_config.switch + "_DB_MIGRATION.xlsx copied in " + box_config.new_excel_file_paths[0] +
+              box_config.switch + "_DB_MIGRATION.xlsx" ".")
+
+
 if __name__ == "__main__":
     site_configs = get_site_configs(SITES_CONFIG_FOLDER)
+    copy_files(site_configs)
     run(site_configs)
