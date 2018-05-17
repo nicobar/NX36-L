@@ -13,8 +13,14 @@ def get_excel_sheet(filename, sheet_name):
     return wb[sheet_name]
 
 def copy_sheet(new_aid, template, sheet):
+    i = 0
+    print('.', end='')
     for row in range(1, VLAN_NUMBER):
         for column in range(0, ord('Z') - ord('A') + 1):
+            i = i + 1
+            if i == 10000:
+                print('.', end='')
+                i = 0
             col = chr(ord('A') + column)
             cell = "{}{}".format(col, row)
             if col == 'Y' and row > 4 and sheet == 'VLAN_Migration_Matrix':
@@ -69,4 +75,6 @@ def run(site_configs):
 
 if __name__ == "__main__":
     site_configs = get_site_configs(SITES_CONFIG_FOLDER)
+    print('Start Script')
     run(site_configs)
+    print('End Script')
