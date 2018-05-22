@@ -297,7 +297,11 @@ def get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, OTHER_OSW,VCE_CFG_TXT_IN, VP
     stp_conf = parse.find_lines(r'^no spanning-tree vlan')
 
     #comment this line
-    stp_conf[0] = '! ' + stp_conf[0]
+    if len(stp_conf) > 0:
+        stp_conf[0] = '! ' + stp_conf[0]
+    else:
+        stp_conf = ['!']
+     
 
     # insert vlan similar to 4093 without spanning-tree
     import json
