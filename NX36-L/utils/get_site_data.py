@@ -19,7 +19,6 @@ SITES_CONFIG_FOLDER = config_path['path']
 
 # this function reads the folders name in a folder
 
-
 def read_files_name(site_folder):
     for file_path in os.listdir(site_folder):
         box_name = file_path.split(".")[0]
@@ -31,10 +30,10 @@ def get_site_configs(site_folder):
     site_name = read_files_name(site_folder)
     site_name = site_name + '/'
     box_configs = []
-    for site_config_file in os.listdir(site_folder + site_name):
+    for site_config_file in os.listdir(site_folder + "/" + site_name):
         # the .json file is the site's cfg file, other files could be reside there as note files
         if '.json' in site_config_file:
-            site_data = open_file(site_folder + site_name + site_config_file)
+            site_data = open_file(site_folder + site_name + "/" +site_config_file)
             for box_config in site_data:
                 box_configs.append(SiteConfig(box_config))
     return box_configs
@@ -60,7 +59,7 @@ class SiteConfig():
                                      "DATA_SRC/XLS/INPUT_STAGE_1/"]
         self.conf_dest_path = [self.base_dir +
                                self.site + self.switch + "/Stage_1/",
-                               self.base_dir + self.site + "DATA_SRC/CFG/"]
+                              self.base_dir + self.site + "DATA_SRC/CFG/"]
         self.portch_VCE_VPE = site_config["portch_VCE_VPE"]
         self.vce_switch = site_config["vce_switch"]
         self.vpe_router = site_config["vpe_router"]

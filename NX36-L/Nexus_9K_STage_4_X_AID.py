@@ -111,15 +111,16 @@ def manage_interface_trunk(wb, osw_list, CMD_PATH):
                        'show_interface_po10_trunk',
                        'show_interface_po100_trunk']
 
-    sheet = ''
+    command_file = ''
     for sh in possible_trunks:
         filename = CMD_PATH + osw_list[0] + '_' + sh + '.txt'
         import os
         statinfo = os.stat(filename)
         if statinfo.st_size > 1:
-            sheet = sh
+            command_file = sh
             break
 
+    sheet = 'show_interface_CE2CE_trunk'
     ws = wb.create_sheet(title=sheet, index=0)
     text = ''
     lst = []
@@ -127,7 +128,7 @@ def manage_interface_trunk(wb, osw_list, CMD_PATH):
 
     print('Starting manage_interface_trunk')
 
-    filename = [CMD_PATH + osw_list[0] + '_' + sheet + '.txt', CMD_PATH + osw_list[1] + '_' + sheet + '.txt']
+    filename = [CMD_PATH + osw_list[0] + '_' + command_file + '.txt', CMD_PATH + osw_list[1] + '_' + command_file + '.txt']
     for file in filename:
 
         with open(file, 'r') as fin:
@@ -251,7 +252,6 @@ def manage_dot1q(wb, vce2vpe_po, nexus_file_dict, vpe_list, trunk_map, OSW_LIST,
                               nexus_file_dict[OSW_LIST[1]][1]]
     vceaddfile_to_sheet_dict = {nexus_vceadd_file_list[0]: 'dot1q_tag_on_VCE1',
                                 nexus_vceadd_file_list[1]: 'dot1q_tag_on_VCE2'}
-
     vpe_file_list = [AID_PATH + vpe_list[0] + '.txt',
                      AID_PATH + vpe_list[1] + '.txt']
     vpefile_to_sheet_dict = {vpe_file_list[0]: 'dot1q_tag_on_VPE1',
@@ -266,6 +266,7 @@ def manage_dot1q(wb, vce2vpe_po, nexus_file_dict, vpe_list, trunk_map, OSW_LIST,
     for vpe_node, vpe_file in zip(trunk_map.keys(), vpe_file_list):
         ws = wb.create_sheet(title=vpefile_to_sheet_dict[vpe_file], index=0)
         create_sheet_for_vpe_tag(ws, vpe_node, vpe_file, trunk_map)
+    print('End manage_dot1q on VPE')
 
 
 def manage_rb(wb, node_list, CMD_PATH):
@@ -378,6 +379,10 @@ def create_sheet_for_vpe_tag(ws, vpe_node, vpe_file, trunk_map):
     for trunk in trunk_map[vpe_node]:
         parse_string += '^interface {}\.|'.format(trunk)
     parse_string = parse_string[:-1]
+
+    #print("##########################")
+    #print(vpe_file)
+    #(trunk_map)
 
     parse = c.CiscoConfParse(vpe_file)
     obj_list = parse.find_objects(parse_string)
@@ -560,7 +565,7 @@ def run(site_configs):
     m = re.search('([A-Z]{2})OSW(\d\d)', site)
     site = m.group(1) + m.group(2)
 
-    OUTPUT_XLS = AID_PATH + 'AID_to_{}_NMP.xlsx'.format(site)
+    OUTPUT_XLS = AID_PATH + 'AID_to_{}_NMP_PARTIAL.xlsx'.format(site)
 
     OSW_LIST = []
     VPE_LIST = []
@@ -573,12 +578,10 @@ def run(site_configs):
         VPE_LIST.append(site_configs[i].vpe_router)
 
         # trunk_map = {vpe_node: [trunk1, trunk2, ]} where trunks are VPE to OSW trunks by VPE side
-
-        TRUNK_MAP[VPE_LIST[i]] = ['Bundle-Ether' + site_configs[i].portch_OSW_VPE,
-                                   list(site_configs[i].vpeosw_to_vpevce.keys())[0],
-                                   list(site_configs[i].vpeosw_to_vpevce.keys())[1],
-                                   list(site_configs[i].vpeosw_to_vpevce.keys())[2]
-                                 ]
+        TRUNK_MAP[VPE_LIST[i]] = ['Bundle-Ether' + site_configs[i].portch_OSW_VPE]
+        if len(list(site_configs[i].vpeosw_to_vpevce.keys())) > 0:
+            for elem in list(site_configs[i].vpeosw_to_vpevce.keys()):
+                TRUNK_MAP[VPE_LIST[i]].append(elem)
 
         NEXUS_FILE_DICT[OSW_LIST[i]] = [OSW_LIST[i] + 'VCE.txt',
                                          OSW_LIST[i] + 'VCE_addendum.txt',
@@ -591,7 +594,6 @@ def run(site_configs):
         VCE_FILE_LIST.append(AID_PATH + NEXUS_FILE_DICT[OSW_LIST[i]][0])
 
 
-    print(TRUNK_MAP)
     wb = Workbook()
     manage_interface_description(wb, OSW_LIST, CMD_PATH)
     manage_standby_brief(wb, OSW_LIST, CMD_PATH)

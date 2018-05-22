@@ -1,7 +1,6 @@
 import requests
 import json
 import os
-import shutil
 from get_site_data import get_site_configs, exists, SITES_CONFIG_FOLDER, open_file
 
 '''
@@ -66,7 +65,9 @@ class Get_Command():
         url = self.base_url + 'config?cpyKey=70293&deviceId=' + str(self.deviceID_osw)
         data = requests.get(url, auth=(self.username, self.password))
         data = json.loads(data.text)
-        return (data["data"][0]["rawData"])
+        for elem in data["data"]:
+            if elem["command"] == "running.config":
+                return elem["rawData"]
 
     def get_running_conf_vpe(self):
         if (self.deviceID_vpe == ""):
@@ -75,7 +76,9 @@ class Get_Command():
         url = self.base_url + 'config?cpyKey=70293&deviceId=' + str(self.deviceID_vpe)
         data = requests.get(url, auth=(self.username, self.password))
         data = json.loads(data.text)
-        return (data["data"][3]["rawData"])
+        for elem in data["data"]:
+            if elem["command"] == "running.config":
+                return elem["rawData"]
 
     def get_cmd(self, cmd):
         if (self.deviceID == ""):
@@ -103,6 +106,11 @@ def check_vlan_similar_to_4093(output_command, box_config):
                     if 'standby' in block:
                         vlans_id = re.search(r'interface Vlan(4\d{3})', block).group(1)
                         vlans_with_spanning_tree.append(vlans_id)
+            if block.startswith('interface Vlan39'):
+                if re.search(r'interface Vlan39\d{2}', block):
+                    if 'standby' in block:
+                        vlans_id = re.search(r'interface Vlan(39\d{2})', block).group(1)
+                        vlans_with_spanning_tree.append(vlans_id)
 
         base_dir = box_config.base_dir + box_config.site
         if not os.path.exists(base_dir + "DATA_SRC/CMD/"):
@@ -123,6 +131,11 @@ def replace_vlan4093(output_command, box_config):
 def check_cfg(box_config):
 
     credentials = open_file(os.path.dirname(os.path.realpath(__file__)) + "/pass.json")
+
+    if exists(box_config.conf_dest_path[1] + box_config.switch + '.txt'):
+        print("Config file is already in place in " + box_config.conf_dest_path[1] +
+              box_config.switch + '.txt' + ".")
+
     if not exists(box_config.conf_dest_path[1] + box_config.switch + '.txt'):
         print("Config file is about to be downloaded in " + box_config.conf_dest_path[1] +
               box_config.switch + '.txt' + ".")
@@ -133,21 +146,10 @@ def check_cfg(box_config):
 
         # replace vlan 4093 with 4000
         output_command = replace_vlan4093(output_command, box_config)
-        for box in box_config.conf_dest_path:
-            save_result(output_command, box, box_config.switch)
+        #for box in box_config.conf_dest_path:
+        save_result(output_command, box_config.conf_dest_path[1], box_config.switch)
 
         print("Config file has been downloaded for " + box_config.switch + ".")
-
-    if exists(box_config.conf_dest_path[1] + box_config.switch + '.txt'):
-        print("Config file is already in place in " + box_config.conf_dest_path[1] +
-              box_config.switch + '.txt' + ".")
-        if not exists(box_config.conf_dest_path[0] + box_config.switch + ".txt"):
-            # copies the file in Stage1 folder
-            source = box_config.conf_dest_path[1] + box_config.switch + ".txt"
-            dest = box_config.conf_dest_path[0] + box_config.switch + ".txt"
-            shutil.copy(source, dest)
-            print("-> Copied in " + box_config.conf_dest_path[1] +
-                  box_config.switch + '.txt' + ".")
 
     ############VPE
     if not exists(box_config.conf_dest_path[1] + box_config.vpe_router + '.txt'):
@@ -159,8 +161,8 @@ def check_cfg(box_config):
         output_command = save_command.get_running_conf_vpe()
 
         #copies only in DATA_SRC/CFG
-        for box in box_config.conf_dest_path:
-            save_result(output_command, box_config.conf_dest_path[1], box_config.vpe_router)
+        #for box in box_config.conf_dest_path:
+        save_result(output_command, box_config.conf_dest_path[1], box_config.vpe_router)
 
         print("Config file has been downloaded for " + box_config.vpe_router + ".")
     else:
@@ -168,6 +170,7 @@ def check_cfg(box_config):
                   box_config.vpe_router + '.txt' + ".")
         #we need to copy this in Stage4 folder
 
+#function not used...
 def get_config(site_configs):
     import shutil
 
@@ -183,20 +186,14 @@ def get_config(site_configs):
             save_command.set_deviceID(id)
             command = save_command.get_running_conf()
 
-            for box in box_config.conf_dest_path:
-               save_result(command, box, box_config.switch)
+            #for box in box_config.conf_dest_path:
+            save_result(command, box_config.conf_dest_path[1], box_config.switch)
 
             print("Config file has been downloaded for " + box_config.switch + ".")
         else:
             print("Config file is already in place in " + box_config.conf_dest_path[1] +
                   box_config.switch + '.txt' + ".")
-            # copies the file in Stage1 folder
 
-            source = box_config.conf_dest_path[1] + box_config.switch + ".txt"
-            dest = box_config.conf_dest_path[0] + box_config.switch + ".txt"
-            shutil.copy(source, dest)
-            print("-> Copied in " + box_config.conf_dest_path[1] +
-                  box_config.switch + '.txt' + ".")
 
 def get_command(site_configs):
 

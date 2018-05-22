@@ -1,12 +1,11 @@
-import json
 from copy import copy
 import openpyxl
 from get_site_data import get_site_configs, exists, SITES_CONFIG_FOLDER
 
-def get_excel_sheet(filename):
+def get_excel_sheet(filename, sheet_name):
     wb = openpyxl.load_workbook(filename)
     first_sheet = wb.sheetnames[0]
-    return wb["Summary_19JAN17"]
+    return wb[sheet_name]
 
 def create_new_excel(sheet_name):
     wb = openpyxl.Workbook()
@@ -62,28 +61,23 @@ def get_excel(site_configs):
         if not exists(box_config.new_excel_file_paths[1] + box_config.switch + "_DB_MIGRATION.xlsx"):
 
             print("Excel file is about to be extracted in " + box_config.new_excel_file_paths[1] +
-                  box_config.switch + "_DB_MIGRATION.xlsx" ".")
+                  box_config.switch + "_DB_MIGRATION.xlsx" + ".")
 
             if original == None:
-                original = get_excel_sheet(box_config.base_dir + "/Migrazione/Nexus_9k_new_v0.6.xlsx")
+                original = get_excel_sheet(box_config.base_dir + "Migrazione/Nexus_9k_new_v0.6.xlsx", "Summary_19JAN17")
             new_excel, wb = create_new_excel(box_config.switch)
             new_site_db = Create_Excel([original, new_excel], box_config)
             new_site_db.extract_info()
 
-            for box in box_config.new_excel_file_paths:
-                save_wb(wb, box, box_config.switch + "_DB_MIGRATION.xlsx")
+            #for box in box_config.new_excel_file_paths:
+            save_wb(wb, box_config.new_excel_file_paths[1], box_config.switch + "_DB_MIGRATION.xlsx")
 
             print("Excel file has been extracted for " + box_config.switch + ".")
         else:
             print("Excel file is already in place in " + box_config.new_excel_file_paths[1] +
                   box_config.switch + "_DB_MIGRATION.xlsx" ".")
-            # copies the file in Stage1 folder
-            source = box_config.new_excel_file_paths[1] + box_config.switch + "_DB_MIGRATION.xlsx"
-            dest = box_config.new_excel_file_paths[0] + box_config.switch + "_DB_MIGRATION.xlsx"
-            shutil.copy(source, dest)
-            print("-> Copied in " + box_config.new_excel_file_paths[0] +
-                  box_config.switch + "_DB_MIGRATION.xlsx" ".")
 
 #if __name__ == "__main__":
 #    site_configs = get_site_configs(SITES_CONFIG_FOLDER)
 #    run_extract_excel(site_configs)
+

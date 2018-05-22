@@ -107,9 +107,7 @@ def get_router_static(vpeosw_2_vpevce_map, VPE_CFG_TXT, VCE_CFG_TXT_IN):
     newparse = c.CiscoConfParse(router_static_cfg_orig)
      
     for ifs_h in vpeosw_2_vpevce_map:
-        ifs = ifs_h[10:]
-        #ifs = re.findall('\d+', ifs_h)[0]
-        search_str_h += '.*' + ifs + '|'
+        search_str_h += ifs_h + '|'
      
     search_str = search_str_h[:-1]
     router_static_conf_h1 = newparse.find_blocks(search_str)
@@ -121,7 +119,10 @@ def get_router_static(vpeosw_2_vpevce_map, VPE_CFG_TXT, VCE_CFG_TXT_IN):
         linea_list = linea_h.split(' ')
         
         if linea_list[0][0].isdigit():
-            h = linea_list[1].split('.')
+            if linea_list[1] == 'vrf':          # leaking case
+                h = linea_list[3].split('.')
+            else:                               # no leaking case
+                h = linea_list[1].split('.') 
             if h[0] in vpeosw_2_vpevce_map and h[1] in vlan_tbm:
                 router_static_conf.append(linea)
         else:
@@ -148,7 +149,7 @@ def get_router_hsrp(vpeosw_2_vpevce_map, VPE_CFG_TXT, be2po_map, VCE_CFG_TXT_IN)
     
     #if_obj_list = parse2.find_objects('Ether')
     #if_obj_list = parse2.find_objects(r'^ ' + OLD_BE + '.+')
-    search_string_list = [ l + '.+' for l in be2po_map ]
+    search_string_list = [ l + '\..+' for l in be2po_map ]
     search_string = '|'.join(search_string_list) 
     
     
@@ -214,7 +215,7 @@ def add_vrrpvip_to_hsrp_cfg(cfg, OSW_CFG_TXT):
                 testo += obj.ioscfg + ['!']
                                 
                         
-    print (testo)
+    #print (testo)
     return testo
 
 def write_cfg(conf_list, VPE_CFG_TXT_OUT):

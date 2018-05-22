@@ -909,10 +909,12 @@ def run(site_configs):
         #############################################
         ################### MAIN ####################
         #############################################
-
-        acl = ['!', 'ip access-list MGW_OM', ' 10 permit ']
+        
+        count_line = 0
+        acl = ['!', 'ip access-list MGW_OM']
         for line in site_config.acl:
-            acl.append(' ' + line)
+            count_line += 10
+            acl.append(' ' + str(count_line) + ' permit ip ' + line)
         acl.append(' 1000 deny ip any any')
         acl.append('!')
         ############## ROUTES ###############

@@ -270,7 +270,7 @@ def get_descr(if_cfg):
     return desc_from_cfg
 
 
-def readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, SHEET, OUTPUT_XLS):
+def readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, SHEET, OUTPUT_XLS, box_config):
 
     header_out = ['SRC OSW IF', 'DST VCE IF', 'Access Type', 'VLAN', 'QoS', 'Nexus AP', 'Member/PO',
                   'Descr', 'Duplex', 'Speed', 'Media Type', 'Action', 'Root-Guard', 'System Type', 'Check Descr']
@@ -317,8 +317,8 @@ def readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, SHEET, OUTPUT_XLS):
         row_w[10].value = str(row_r[10].value)
         # Copy Action
         row_w[11].value = str(row_r[17].value)
-        # Copy Root_Guard
-        row_w[12].value = str(row_r[11].value)
+
+        # copy System Type
         row_w[13].value = str(row_r[12].value)
 
         for intf_obj in intf_obj_list:
@@ -373,13 +373,36 @@ def readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, SHEET, OUTPUT_XLS):
                         row_w[7].value = get_descr(intf_cfg)
                         row_w[14].value = "Description CHANGED!!!"
                         row_w[14].fill = pinkFill
-
             else:
                 continue
 
+        # Copy Root_Guard
+        import json
+        vlan_without_spt = []
+        with open(box_config.base_dir + box_config.site + "/DATA_SRC/CMD/" +
+                  box_config.switch + '_vlan_similar_to_4093.txt') as f:
+            vlan_without_spt = json.load(f)
+
+        # Copy vlan lower than 3900
+        for vlan_no_spt in vlan_without_spt:
+            vlans_in_excel = str(row_w[3].value).split(',')
+            if vlan_no_spt in vlans_in_excel:
+                for vlan in vlans_in_excel:
+                    if int(vlan) < 3900:
+                        VlanProblem(row_w[0].value, box_config.switch)
+                row_w[12].value = "No"
+            else:
+                row_w[12].value = str(row_r[11].value)
     wb_w.save(filename=OUTPUT_XLS)
     print("End F1")
 
+def VlanProblem(interface, box):
+    try:
+        raise ValueError('Vlan lower than 3900 is on the same trunk '
+                         'of a Vlan similar to 4000 on: ' + interface + ' on ' + box)
+        raise Exception('VlanProblem')
+    except Exception as error:
+        raise
 
 def further_interfaces(site_config, OSW_CFG_TXT, SHEET, OUTPUT_XLS):
     parse = c.CiscoConfParse(OSW_CFG_TXT)
@@ -439,12 +462,36 @@ def run(site_configs):
 
         SHEET = box_config.sheet
 
-        readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, box_config.sheet, OUTPUT_XLS)
+        readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, box_config.sheet, OUTPUT_XLS, box_config)
         colour_output_xlsx(box_config.sheet, OUTPUT_XLS)
         further_interfaces(box_config, OSW_CFG_TXT, box_config.sheet, OUTPUT_XLS)
         create_legendas(OUTPUT_XLS)
         print('End script')
 
+#copies config and excel files in Stage_1 folder from DATA_SRC folder
+def copy_files(box_configs):
+    import shutil
+    import os
+    for box_config in box_configs:
+
+        # copies config files  in Stage1 folder
+        source = box_config.conf_dest_path[1] + box_config.switch + ".txt"
+        dest = box_config.conf_dest_path[0] + box_config.switch + ".txt"
+        if not os.path.exists(box_config.conf_dest_path[0]):
+            os.makedirs(box_config.conf_dest_path[0])
+        shutil.copy(source, dest)
+        print(box_config.switch + ".txt copied in " + box_config.conf_dest_path[1] +
+              box_config.switch + '.txt' + ".")
+
+        # copies excel files  in Stage1 folder
+        source = box_config.new_excel_file_paths[1] + box_config.switch + "_DB_MIGRATION.xlsx"
+        dest = box_config.new_excel_file_paths[0] + box_config.switch + "_DB_MIGRATION.xlsx"
+        shutil.copy(source, dest)
+        print(box_config.switch + "_DB_MIGRATION.xlsx copied in " + box_config.new_excel_file_paths[0] +
+              box_config.switch + "_DB_MIGRATION.xlsx" ".")
+
+
 if __name__ == "__main__":
     site_configs = get_site_configs(SITES_CONFIG_FOLDER)
+    copy_files(site_configs)
     run(site_configs)
