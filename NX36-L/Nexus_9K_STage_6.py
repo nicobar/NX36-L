@@ -253,7 +253,8 @@ def remove_not_migrated_vlan(vrrp_vlans, vce):
 
 def run(site_configs):
     import re
-
+    
+    
     AID_PATH = site_configs[0].base_dir + site_configs[0].site + 'AID/'
     FINAL_PATH = site_configs[0].base_dir + site_configs[0].site + 'FINAL/'
 
@@ -341,5 +342,7 @@ def run(site_configs):
     migration_table.save(filename=OUTPUT_XLS)
 
 if __name__ == "__main__":
+    print ("script starts")
     site_configs = get_site_configs(SITES_CONFIG_FOLDER)
     run(site_configs)
+    print ("script ends")
