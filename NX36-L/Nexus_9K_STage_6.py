@@ -35,15 +35,16 @@ def parse_vrrp(file_cmd):
     import re
     with open(file_cmd, encoding="utf-8") as file:
         config = file.read()
-        config = config.split("\n")
-        vlans = {}
-        for line in config:
-            import os
-            line = os.linesep.join([s for s in line.splitlines() if s])
-            if line.startswith('Vl'):
-                vlans_id = re.search(r'Vl(\d+)', line).group(1)
-                line = line.split("  ")
-                vlans[vlans_id] = [line[-1]]
+    config = config.split("\n")
+    vlans = {}
+    for line in config:
+        import os
+        line = os.linesep.join([s for s in line.splitlines() if s])
+        if line.startswith('Vl'):
+            vlans_id = re.search(r'Vl(\d+)', line).group(1)
+            line =  line.strip()
+            line = line.split(" ")
+            vlans[vlans_id] = [line[-1]]
     return vlans
 
 
@@ -98,25 +99,25 @@ def check_vlan(vrrp_vlans, vce):
     import re
     with open(vce, encoding="utf-8") as file:
         config = file.read()
-        static_pos = config.find('####')
-        static_block = config[static_pos:]
-        static_block = static_block.split("\n")
+    static_pos = config.find('####')
+    static_block = config[static_pos:]
+    static_block = static_block.split("\n")
 
-        for line in static_block[2:]:
-            import os
-            line = os.linesep.join([s for s in line.splitlines() if s])
-            if 'ip route' in line:
-                data = re.search(r'ip route (\d+\.\d+\.\d+\.\d+) (\d+\.\d+\.\d+\.\d+) Vlan(\d+)', line)
-                vlan = data.group(3)
+    for line in static_block[2:]:
+        import os
+        line = os.linesep.join([s for s in line.splitlines() if s])
+        if 'ip route' in line:
+            data = re.search(r'ip route (\d+\.\d+\.\d+\.\d+) (\d+\.\d+\.\d+\.\d+) Vlan(\d+)', line)
+            vlan = data.group(3)
 
-                if vlan in vrrp_vlans:
-                    ip = data.group(1)
-                    mask = data.group(2)
-                    bare_network = net_calc(ip, mask)
+            if vlan in vrrp_vlans:
+                ip = data.group(1)
+                mask = data.group(2)
+                bare_network = net_calc(ip, mask)
 
-                    vrrp_vlans[vlan].append(bare_network)
-                    vrrp_vlans[vlan].append(mask)
-                    vrrp_vlans[vlan].append('static')
+                vrrp_vlans[vlan].append(bare_network)
+                vrrp_vlans[vlan].append(mask)
+                vrrp_vlans[vlan].append('static')
     return vrrp_vlans
 
 def net_calc(ip, mask):
@@ -276,14 +277,6 @@ def run(site_configs):
 
     migration_table = openpyxl.Workbook()
 
-
-    ####### STATIC ROUTE SHEET ##################
-    sheet = 'Static Routes (OSW)'
-    ws = migration_table.create_sheet(sheet)
-
-    fill_static_route(site_configs, ws)
-    remove_static_from_final(site_configs)
-
     #########  VRRP SHEET  #######################
     sheet = '{} VRRP VIP & STATIC'.format(site)
     ws = migration_table.create_sheet(sheet)
@@ -309,6 +302,12 @@ def run(site_configs):
         final = get_subnet_for_non_static(vrrp_vlans, CFG_PATH_OSW)
         fill_vrrp_excel(final, ws)
 
+    ####### STATIC ROUTE SHEET ##################
+    sheet = 'Static Routes (OSW)'
+    ws = migration_table.create_sheet(sheet)
+
+    fill_static_route(site_configs, ws)
+    remove_static_from_final(site_configs)
 
     ####### VOICE VLAN ROUTE SHEET ##################
     sheet = '{} Voice VLAN'.format(site)
