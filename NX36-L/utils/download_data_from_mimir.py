@@ -120,13 +120,48 @@ def check_vlan_similar_to_4093(output_command, box_config):
 
 def replace_vlan4093(output_command, box_config):
     # replace vlan 4093 with 4000
-    if '4000' in output_command:
+    output_command = output_command.split("\n")
+    if vlan_exists('4000', output_command, box_config):
         print("VLAN 4000 already exist in " + box_config.conf_dest_path[1] + box_config.switch + '.txt. ')
+        print("Please adapt the configuration manually")
         exit(0)
-    output_command = output_command.replace('4093', '4000')
+
+    output = ''
+    for line in output_command:
+        if '4093' in line:
+            choise = ''
+            while (choise != 'n' and choise != 'y'):
+                print('\n   ' + line)
+                choise = input('   Do you want to replace vlan 4093 with 4000 on this line? [y/n]:')
+            if choise == 'y':
+                output = output + '\n' + line.replace('4093', '4000')
+            else:
+                output = output + '\n' + line
+        else:
+            output = output + '\n' + line
+
     # check vlan similar to 4093 and print them in a file
-    check_vlan_similar_to_4093(output_command, box_config)
-    return output_command
+    check_vlan_similar_to_4093(output, box_config)
+    return output
+
+
+def vlan_exists(vlan,output_command, box_config):
+    warning = ''
+    for line in output_command:
+        if vlan in line:
+            warning = warning + line
+    if warning == '':
+        return False
+    else:
+        print('The following lines in ' + box_config.switch + ' contain the vlan ID ' + vlan + ':\n')
+        print(warning + '\n')
+        choise = ''
+        while(choise != 'n' and choise != 'y'):
+            choise = input('Do you want to ignore? [y/n]:')
+        if choise == 'y':
+            return False
+        else:
+            return True
 
 def check_cfg(box_config):
 
