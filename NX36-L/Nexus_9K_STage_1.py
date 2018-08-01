@@ -136,12 +136,11 @@ def get_channel_group(if_cfg):
 
 
 def create_legendas(OUTPUT_XLS):
-    wb = load_workbook(OUTPUT_XLS)
+    wb =  Workbook()
     create_qos_legendas(wb, OUTPUT_XLS)
     create_color_legendas(wb, OUTPUT_XLS)
     create_check_legendas(wb, OUTPUT_XLS)
     create_ap_legendas(wb, OUTPUT_XLS)
-
 
 def create_qos_legendas(my_wb, OUTPUT_XLS):
     QOS_SHEET = 'QoS Legenda'
@@ -202,7 +201,7 @@ def create_check_legendas(my_wb, OUTPUT_XLS):
 
 def create_ap_legendas(my_wb, OUTPUT_XLS):
     AP_SHEET = 'Access Point Legenda'
-    ws = my_wb.create_sheet(index=1, title=AP_SHEET)
+    ws = my_wb.create_sheet(index=4, title=AP_SHEET)
 
     ws['A1'] = 'Access Point Values (Column C)'
     ws['A2'] = 'Access'
@@ -282,7 +281,7 @@ def readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, SHEET, OUTPUT_XLS, box_confi
 
     intf_obj_list = parse.find_objects(r'^interface')
     wb_r = load_workbook(INPUT_XLS)
-    wb_w = Workbook()
+    wb_w = load_workbook(OUTPUT_XLS)
 
     ws_r = wb_r[SHEET]
     ws_w = wb_w.create_sheet(index=0, title=SHEET)
@@ -465,10 +464,10 @@ def run(site_configs):
 
         SHEET = box_config.sheet
 
+        create_legendas(OUTPUT_XLS)
         readin_xls_writeout_xls(OSW_CFG_TXT, INPUT_XLS, box_config.sheet, OUTPUT_XLS, box_config)
         colour_output_xlsx(box_config.sheet, OUTPUT_XLS)
         further_interfaces(box_config, OSW_CFG_TXT, box_config.sheet, OUTPUT_XLS)
-        create_legendas(OUTPUT_XLS)
         print('End script')
 
 #copies config and excel files in Stage_1 folder from DATA_SRC folder
