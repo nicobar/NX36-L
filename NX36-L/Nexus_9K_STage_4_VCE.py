@@ -176,14 +176,22 @@ def from_file_to_cfg_as_list(file_name):
     return show_cmd
 
 def clean_not_migrated_vlans(voice_vlan, migrating_vlan_lst):
-    vlan_to_remove = []
-    for vlan in voice_vlan:
-        if vlan not in migrating_vlan_lst:
-            vlan_to_remove.append(vlan)
+#     vlan_to_remove = []
+#     for vlan in voice_vlan:
+#         if vlan not in migrating_vlan_lst:
+#             vlan_to_remove.append(vlan)
+# 
+#     output = [x for x in voice_vlan if x not in vlan_to_remove]
+    myoutput = [ vlan for vlan in voice_vlan if vlan in migrating_vlan_lst ]
+    return myoutput
 
-    output = [x for x in voice_vlan if x not in vlan_to_remove]
-    return output
 
+def add_range(myoutput, range):
+    
+    temp = from_range_to_list(range)
+    myoutput.extend(temp)
+    return myoutput
+    
 def get_voice_vlan(stp_conf):
     m = re.search('no spanning-tree vlan (.+)', stp_conf)
     found = ''
@@ -194,13 +202,12 @@ def get_voice_vlan(stp_conf):
         groups = str(found).split(',')
         for vlan_range in groups:
             if '-' in vlan_range:
-                for x in from_range_to_list(vlan_range):
-                    output.append(x)
+                output =  add_range(output, vlan_range)
             else:
                 output.append(vlan_range)
     else:
         if '-' in found:
-            output.append(','.join(from_range_to_list(found)))
+            output =  add_range(output, found)
         else:
             output.append(found)
     return output
