@@ -121,11 +121,11 @@ def check_vlan(vrrp_vlans, vce):
     return vrrp_vlans
 
 def net_calc(ip, mask):
-    import ipcalc
+    import ipaddress
 
-    addr = ipcalc.IP(ip, mask)
-    network_with_cidr = str(addr.guess_network())
-    bare_network = network_with_cidr.split('/')[0]
+    intf_addr = ipaddress.ip_interface(ip + '/' + mask)
+    network = str(intf_addr.network)
+    bare_network = network.split('/')[0]
     #print(addr, network_with_cidr, bare_network)
 
     return bare_network
