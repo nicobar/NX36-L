@@ -402,9 +402,10 @@ def VlanProblem(interface, box):
     try:
         raise ValueError('Vlan lower than 3900 is on the same trunk '
                          'of a Vlan similar to 4000 on: ' + interface + ' on ' + box)
-        raise Exception('VlanProblem')
-    except Exception as error:
-        raise
+    except ValueError as error:
+        print('\n' + str(error))
+        print("######## Please handle this error before to continue #####")
+        exit(0)
 
 def further_interfaces(site_config, OSW_CFG_TXT, SHEET, OUTPUT_XLS):
     parse = c.CiscoConfParse(OSW_CFG_TXT)
