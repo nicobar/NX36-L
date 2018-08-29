@@ -163,6 +163,32 @@ def vlan_exists(vlan,output_command, box_config):
         else:
             return True
 
+def check_encapsulation(output_command, box_config):
+    interface_with_isl = []
+    config = output_command.split("!")
+    for block in config:
+        import os
+        import re
+        block = os.linesep.join([s for s in block.splitlines() if s])
+        if block.startswith('interface '):
+            if 'isl' in block:
+                interface = re.search(r'interface.+\n', block).group()
+                interface_with_isl.append(interface)
+
+    if len(interface_with_isl) > 0:
+        try:
+            raise ValueError('The following interface on ' + box_config.switch + ' have ISL encapsulation issue: ')
+        except ValueError as error:
+
+            print('\n#############\n' + str(error))
+            for int in interface_with_isl:
+                print('  ' + int)
+            choise = ''
+            while (choise != 'n' and choise != 'y'):
+                choise = input('  Do you want to ignore? [y/n]:')
+                if choise == 'n':
+                    exit(0)
+
 def check_cfg(box_config):
 
     credentials = open_file(os.path.dirname(os.path.realpath(__file__)) + "/pass.json")
@@ -181,6 +207,8 @@ def check_cfg(box_config):
 
         # replace vlan 4093 with 4000
         output_command = replace_vlan4093(output_command, box_config)
+        check_encapsulation(output_command, box_config)
+
         #for box in box_config.conf_dest_path:
         save_result(output_command, box_config.conf_dest_path[1], box_config.switch)
 

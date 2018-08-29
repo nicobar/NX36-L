@@ -404,8 +404,12 @@ def VlanProblem(interface, box):
                          'of a Vlan similar to 4000 on: ' + interface + ' on ' + box)
     except ValueError as error:
         print('\n' + str(error))
-        print("######## Please handle this error before to continue #####")
-        exit(0)
+        choise = ''
+        while (choise != 'n' and choise != 'y'):
+            choise = input('  Do you want to ignore? [y/n]:')
+            if choise == 'n':
+                exit(0)
+
 
 def further_interfaces(site_config, OSW_CFG_TXT, SHEET, OUTPUT_XLS):
     parse = c.CiscoConfParse(OSW_CFG_TXT)
