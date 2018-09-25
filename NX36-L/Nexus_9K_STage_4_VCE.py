@@ -530,90 +530,29 @@ def copy_file(source_file, dest_file, dest_path):
         exit(0)
     create_dir(dest_path)
     shutil.copy(source_file, dest_file)
-#     def prepare_stage_4_vce_files(self):
-#
-#         dest_path = self.box_config.base_dir + self.box_config.site + self.box_config.switch + 'Stage_4/VCE/'
-#         src_cfg_path = self.box_config.base_dir + self.box_config.site + + 'DATA_SRC/CFG'
-#         src_final_path = self.box_config.base_dir + self.box_config.site + + 'FINAL/'
-#
-#         vpe_file = dest_path
-#         if not os.path.exists(dest_path):
-#             os.makedirs(dest_path)
-#
-#         dst_vpe_path = dest_path + self.box_config.vpe_router + '.txt'
-#         src_vpe_path = src_cfg_path + self.box_config.vpe_router + '.txt'
-#         if not os.is_file(dst_vpe_path):
-#             print("copying " + src_vpe_path + " to " + dst_vpe_path)
-#             copyfile(src_vpe_path, dst_vpe_path)
-#         else:
-#             print(dst_vpe_path + "already exists")
-#
-#         dst_osw_path = dest_path + self.box_config.switch + '.txt'
-#         src_osw_path = src_cfg_path + self.box_config.switch + '.txt'
-#         if not os.is_file(dst_osw_path):
-#             print("copying " + src_vpe_path + " to " + dst_vpe_path)
-#             copyfile(src_vpe_path, dst_vpe_path)
-#         else:
-#             print(dst_vpe_path)
-#
-#         dst_vce_path = dest_path + self.box_config.switch + 'VCE.txt'
-#         src_vce_path = src_final_path + self.box_config.switch + 'VCE.txt'
-#         if not os.is_file(dst_vce_path):
-#             print("copying " + src_vce_path + " to " + dst_vce_path)
-#             copyfile(src_vce_path, dst_vce_path)
-#         else:
-#             print(dst_vce_path)
-#
-#         dst_vsw_path = dest_path + self.box_config.switch + 'VSW.txt'
-#         src_vsw_path = src_final_path + self.box_config.switch + 'VSW.txt'
-#         if not os.is_file(dst_vsw_path):
-#             print("copying " + src_vsw_path + " to " + dst_vsw_path)
-#             copyfile(src_vsw_path, dst_vsw_path)
-#         else:
-#             print(dst_vsw_path)
 
-#################### CONSTATNT ##################
+def VlanMissing(vlan):
+    try:
+        raise ValueError('Vlan' + vlan + ' is missing on vlan DB but it has to be migrated!')
+    except ValueError as error:
+        print('\n#############\n' + str(error))
+        print('#############\n')
 
+        exit(0)
 
-# new_po = 'interface Port-channel411'  # 4 e' fisso, 1 e' il sito e l ultimo numero e' la coppia
-#
-# # be2po_map OR BETTER vpe_to_osw_if_mapping reports all trunk interfaces (main BE/PO and voice/sig trunks)
-# # This MUST BE CONFIGURED on STAGE_4 both VCE and VPE steps
-# #
-#
-# be2po_map = {'interface Bundle-Ether111': 'interface Port-channel111',               # This is BE <--> PO mapping
-#              'interface GigabitEthernet0/2/1/1': 'interface GigabitEthernet4/6',  # This is VOICE/SIG TRUNK mapping
-#              'interface GigabitEthernet0/7/1/1': 'interface GigabitEthernet4/7',  # This is VOICE/SIG TRUNK mapping
-#              'interface GigabitEthernet0/2/1/2': 'interface GigabitEthernet4/8',  # This is VOICE/SIG TRUNK mapping
-#              }
-#
-# PO_OSW_MATE = 'Port-channel1'
-#
-# OSW_SWITCH = 'PAOSW011'
-# VSW_SWITCH = 'PAVSW01101'
-# VPE_ROUTER = 'PAVPE013'
-# VCE_SWITCH = 'PAVCE011'
-#
-# VPE_CFG_TXT = BASE_DIR + VPE_ROUTER + '.txt'
-# OSW_CFG_TXT = BASE_DIR + OSW_SWITCH + '.txt'
-# VSW_CFG_TXT_IN = BASE_DIR + OSW_SWITCH + 'VSW.txt'
-# VCE_CFG_TXT_OUT = BASE_DIR + OSW_SWITCH + 'VCE_addendum.txt'
-# VCE_CFG_TXT_IN = BASE_DIR + OSW_SWITCH + 'VCE.txt'
+def get_vlan_from_vlan_db(VLAN_DB_FILE):
+    f = open(VLAN_DB_FILE, 'r+')
+    vlan_db = []
+    for line in f:
+        vlan = re.search(r'(\d+) ', line)
+        if vlan:
+            vlan_db.append(vlan.group(1))
+    return vlan_db
 
-
-############## MAIN ###########
-# print('Script Starts')
-# po_vce_cfg_list = get_po_vce()
-# stp_cfg_list = get_stp_conf()
-# svi_conf_list = get_801_802_svi()
-# po700_conf = get_po_vce_vce_700()
-# po301_conf, po1000_conf = get_po_vce_vsw1_301_and_1000()
-# vce_conf = ['!'] + stp_cfg_list + ['!'] + po_vce_cfg_list + ['!'] + po700_conf + ['!'] + po1000_conf + ['!'] + po301_conf + ['!'] + svi_conf_list + ['!']
-# for elem in vce_conf:
-#     print(elem)
-# write_cfg(vce_conf)
-# print('Script Ends')
-
+def check_if_vlans_to_migrate_are_in_the_vlan_db(vlan_to_migrate, vlan_db):
+    for vlan in vlan_to_migrate:
+        if vlan not in vlan_db:
+            VlanMissing(vlan)
 
 def run(site_configs):
 
@@ -646,6 +585,11 @@ def run(site_configs):
         VCE_CFG_TXT_IN = BASE_DIR + OSW_SWITCH + 'VCE.txt'
 
         print('Script Starts')
+        #check if all vlan to migrate are present in the vlan database
+        vlan_to_migrate = get_vlan_to_be_migrated(VCE_CFG_TXT_IN)
+        vlan_db = get_vlan_from_vlan_db(CMD_PATH + OSW_SWITCH + "_show_vlan_brief.txt" )
+        check_if_vlans_to_migrate_are_in_the_vlan_db(vlan_to_migrate, vlan_db)
+
         po_vce_cfg_list = get_po_vce(VPE_CFG_TXT, VCE_CFG_TXT_IN, new_po, be2po_map)
         stp_cfg_list = get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, OTHER_OSW, VCE_CFG_TXT_IN,
                                     VPE_CFG_TXT, be2po_map, VPE_ROUTER, box_config.base_dir + box_config.site)
