@@ -537,7 +537,6 @@ def VlanMissing(vlan, OSW_SWITCH):
     except ValueError as error:
         print('\n#############\n' + str(error))
         print('#############\n')
-
         exit(0)
 
 def get_vlan_from_vlan_db(VLAN_DB_FILE):
@@ -587,7 +586,10 @@ def run(site_configs):
         print('Script Starts')
         #check if all vlan to migrate are present in the vlan database
         vlan_to_migrate = get_vlan_to_be_migrated(VCE_CFG_TXT_IN)
-        vlan_db = get_vlan_from_vlan_db(CMD_PATH + OSW_SWITCH + "_show_vlan_brief.txt" )
+        vlan_on_3000 = get_vlan_to_be_migrated(VSW_CFG_TXT_IN)
+        vlan_db = get_vlan_from_vlan_db(CMD_PATH + OSW_SWITCH + "_show_vlan_brief.txt")
+        for vlan in vlan_on_3000:
+            vlan_db.append(vlan)
         check_if_vlans_to_migrate_are_in_the_vlan_db(vlan_to_migrate, vlan_db, OSW_SWITCH)
 
         po_vce_cfg_list = get_po_vce(VPE_CFG_TXT, VCE_CFG_TXT_IN, new_po, be2po_map)
