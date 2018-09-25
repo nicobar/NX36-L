@@ -739,7 +739,7 @@ def transform_routes_for_nexus(routes):
     return n9k_routes
 
 def read_partial_conf(file_path):
-    with open(file_path, encoding="utf-8") as file:
+    with open(file_path) as file:
         config = file.read()
         config = config.split("!")
 
