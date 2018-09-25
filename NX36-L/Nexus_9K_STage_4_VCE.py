@@ -531,9 +531,9 @@ def copy_file(source_file, dest_file, dest_path):
     create_dir(dest_path)
     shutil.copy(source_file, dest_file)
 
-def VlanMissing(vlan):
+def VlanMissing(vlan, OSW_SWITCH):
     try:
-        raise ValueError('Vlan' + vlan + ' is missing on vlan DB but it has to be migrated!')
+        raise ValueError('Vlan' + vlan + ' is missing on ' + OSW_SWITCH + ' vlan DB but it has to be migrated!')
     except ValueError as error:
         print('\n#############\n' + str(error))
         print('#############\n')
@@ -549,10 +549,10 @@ def get_vlan_from_vlan_db(VLAN_DB_FILE):
             vlan_db.append(vlan.group(1))
     return vlan_db
 
-def check_if_vlans_to_migrate_are_in_the_vlan_db(vlan_to_migrate, vlan_db):
+def check_if_vlans_to_migrate_are_in_the_vlan_db(vlan_to_migrate, vlan_db, OSW_SWITCH):
     for vlan in vlan_to_migrate:
         if vlan not in vlan_db:
-            VlanMissing(vlan)
+            VlanMissing(vlan, OSW_SWITCH)
 
 def run(site_configs):
 
@@ -588,7 +588,7 @@ def run(site_configs):
         #check if all vlan to migrate are present in the vlan database
         vlan_to_migrate = get_vlan_to_be_migrated(VCE_CFG_TXT_IN)
         vlan_db = get_vlan_from_vlan_db(CMD_PATH + OSW_SWITCH + "_show_vlan_brief.txt" )
-        check_if_vlans_to_migrate_are_in_the_vlan_db(vlan_to_migrate, vlan_db)
+        check_if_vlans_to_migrate_are_in_the_vlan_db(vlan_to_migrate, vlan_db, OSW_SWITCH)
 
         po_vce_cfg_list = get_po_vce(VPE_CFG_TXT, VCE_CFG_TXT_IN, new_po, be2po_map)
         stp_cfg_list = get_stp_conf(OSW_CFG_TXT, CMD_PATH, OSW_SWITCH, OTHER_OSW, VCE_CFG_TXT_IN,
