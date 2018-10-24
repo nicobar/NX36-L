@@ -59,8 +59,8 @@ def run(site_configs):
     ows2_cell = "{}{}".format("B", "4")
     po69_1_cell = "{}{}".format("D", "1")
     po69_2_cell = "{}{}".format("D", "2")
-    STP_Cost[vce1_cell].value = site_configs[0].vpe_router
-    STP_Cost[vce2_cell].value = site_configs[1].vpe_router
+    STP_Cost[vce1_cell].value = site_configs[0].vce_switch
+    STP_Cost[vce2_cell].value = site_configs[1].vce_switch
     STP_Cost[osw1_cell].value = site_configs[0].switch
     STP_Cost[ows2_cell].value = site_configs[1].switch
     STP_Cost[po69_1_cell].value = site_configs[0].vce_switch + '-' + site_configs[0].switch
