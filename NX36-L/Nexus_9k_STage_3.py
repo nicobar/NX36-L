@@ -566,14 +566,17 @@ def get_svi_to_area(d_net_in_area, OSW_CFG_TXT):
                 # the net_dict will be ordered by prefix length
                 for key, value in sorted(net_dict.items(), reverse=True):
                     # net_area is a tuble (IPv4Network('10.189.97.194/32'), '41')
+                    assigned = False
                     for net_area in value:
                         if ip_svi in net_area[0]:
                             if type(net_area[1]) is str and '.' not in net_area[1]:
                                 #if type(area) is str and len(area) <= 3:
                                 area = int(net_area[1])
                             dict_svi_to_area[svi_obj.text] = str(ipaddress.IPv4Address(area))
+                            assigned = True
                             break
-                    break
+                    if assigned == True:
+                        break
 
     return dict_svi_to_area
 
