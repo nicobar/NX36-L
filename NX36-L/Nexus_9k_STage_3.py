@@ -520,6 +520,8 @@ def get_net_in_area(OSW_CFG_TXT):
         if hl[0] == 'network':
             net = hl[1]
             net_hostmask = hl[2]
+            if net_hostmask == '0.0.0.0':
+                net_hostmask = '255.255.255.255'
             area = hl[4]
             if area not in dict_net_in_area:
                 dict_net_in_area[area] = [
@@ -529,12 +531,22 @@ def get_net_in_area(OSW_CFG_TXT):
                 dict_net_in_area[area].append(
                     ipaddress.IPv4Network(
                         net + '/' + net_hostmask))
+
     for area in dict_net_in_area:
         dict_net_in_area[area] = list(
             ipaddress.collapse_addresses(
                 dict_net_in_area[area]))
     return dict_net_in_area
 
+def get_net_dict_with_prefix_length_as_key(d_net_in_area):
+    subnets = {}
+    for area in d_net_in_area:
+        for net in d_net_in_area[area]:
+            if int(net.prefixlen) not in subnets:
+                subnets[int(net.prefixlen)] = [(net, area)]
+            else:
+                subnets[int(net.prefixlen)].append((net, area))
+    return subnets
 
 def get_svi_to_area(d_net_in_area, OSW_CFG_TXT):
     ''' take { area: [ipaddress('prefix/lenght'),] } and returns a dict of kind: { SVI : area } '''
@@ -550,13 +562,18 @@ def get_svi_to_area(d_net_in_area, OSW_CFG_TXT):
             if hl[0] == 'ip' and hl[1] == 'address':
                 ip_svi = ipaddress.IPv4Address(hl[2])
                 dict_svi_to_area[svi_obj.text] = -1
-                for area in d_net_in_area:
-                    for net in d_net_in_area[area]:
-                        if ip_svi in net:
-                            if type(area) is str and '.' not in area:
+                net_dict = get_net_dict_with_prefix_length_as_key(d_net_in_area)
+                # the net_dict will be ordered by prefix length
+                for key, value in sorted(net_dict.items(), reverse=True):
+                    # net_area is a tuble (IPv4Network('10.189.97.194/32'), '41')
+                    for net_area in value:
+                        if ip_svi in net_area[0]:
+                            if type(net_area[1]) is str and '.' not in net_area[1]:
                                 #if type(area) is str and len(area) <= 3:
-                                area = int(area)
+                                area = int(net_area[1])
                             dict_svi_to_area[svi_obj.text] = str(ipaddress.IPv4Address(area))
+                            break
+                    break
 
     return dict_svi_to_area
 
@@ -739,8 +756,8 @@ def transform_routes_for_nexus(routes):
     return n9k_routes
 
 def read_partial_conf(file_path):
-    with open(file_path) as file:
-        config = file.read()
+    with open(file_path, 'rb') as file:
+        config = file.read().decode(errors='replace')
         config = config.split("!")
 
         vlans = {}
