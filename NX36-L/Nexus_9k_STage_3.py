@@ -928,12 +928,15 @@ def run(site_configs):
         #############################################
         
         count_line = 0
-        acl = ['!', 'ip access-list MGW_OM']
-        for line in site_config.acl:
-            count_line += 10
-            acl.append(' ' + str(count_line) + ' permit ip ' + line)
-        acl.append(' 1000 deny ip any any')
-        acl.append('!')
+        if site_config.acl[0] != "":
+            acl = ['!', 'ip access-list MGW_OM']
+            for line in site_config.acl:
+                count_line += 10
+                acl.append(' ' + str(count_line) + ' permit ip ' + line)
+            acl.append(' 1000 deny ip any any')
+            acl.append('!')
+        else:
+            acl = [""]
         ############## ROUTES ###############
 
         routes = get_cleaned_routes(OSW_CFG_TXT)
