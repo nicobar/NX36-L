@@ -283,15 +283,15 @@ def get_normalized_vlan_OSWVCEVSW_cfg(vlan_ntbm, OSW_CFG_TXT):
 
     parse = c.CiscoConfParse(OSW_CFG_TXT)
 
-    vlan_obj_list = parse.find_objects(r'^vlan \d+$')
+    vlan_obj_list = parse.find_objects(r'^vlan \d+')
 
     for vlan_obj in vlan_obj_list:
         vlan = vlan_obj.text
-        if re.findall(r'^vlan (\d+)$', vlan)[0] in vlan_ntbm:
+        if re.findall(r'^vlan (\d+)', vlan)[0] in vlan_ntbm:
             vlan_obj.delete()
 
     parse.commit()
-    vlan_obj_list = parse.find_objects(r'^vlan \d+$')
+    vlan_obj_list = parse.find_objects(r'^vlan \d+')
     cf_vlan_list = [vlan_obj.ioscfg + ['!'] for vlan_obj in vlan_obj_list]
     cf_vlan = list(itertools.chain.from_iterable(cf_vlan_list))
     return cf_vlan
