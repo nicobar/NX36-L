@@ -330,7 +330,8 @@ def clean_if_cfg(cfg):
         r'spanning-tree bpduguard enable',
         r'no ip address',
         r'switchport trunk encapsulation dot1q',
-        r'speed nonegotiate')
+        r'speed nonegotiate',
+        r'service-policy input')
 
     intf_obj_list = parse.find_objects(r'^interface')
     for intf_obj in intf_obj_list:
