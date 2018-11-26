@@ -275,6 +275,44 @@ def copy_file(source_file, dest_file, dest_path):
     create_dir(dest_path)
     shutil.copy(source_file, dest_file)
 
+def check_bgp_adj(VPE_CFG_TXT, vpeosw_to_vpevce_map, final_folder):
+    osw_sub_int = list(vpeosw_to_vpevce_map.keys())[0]
+    vce_sub_int = vpeosw_to_vpevce_map[osw_sub_int]
+    parse = c.CiscoConfParse(VPE_CFG_TXT)
+    obj_list = parse.find_objects(r'router bgp ')
+    data = []
+    for bgp_process in obj_list:
+        if bgp_process.re_search_children(r'vrf'):
+            vrfs = bgp_process.re_search_children(r'vrf')
+            for vrf in vrfs:
+                if vrf.re_search_children(r'neighbor'):
+                    neighbors = vrf.re_search_children(r'neighbor')
+                    for neighbor in neighbors:
+                        if neighbor.re_search_children(r'update-source ' + osw_sub_int + '.'):
+                            if len(data) == 0:
+                                data = [{'bgp': bgp_process.ioscfg[0].strip(), 'vrf': vrf.ioscfg[0].strip(),
+                                     'neighbor': neighbor.ioscfg[0].strip(),
+                                     'bundle_src': (neighbor.re_search_children(r'update-source'))[0].ioscfg[0].strip(),
+                                     'bundle_dst': 'update-source ' + vce_sub_int + '.' +
+                                       (neighbor.re_search_children(r'update-source'))[0].ioscfg[0].strip().split('.')[1]}]
+                            else:
+                                data.append({'bgp': bgp_process.ioscfg[0].strip(), 'vrf': vrf.ioscfg[0].strip(),
+                                     'neighbor': neighbor.ioscfg[0].strip(),
+                                     'bundle_src': (neighbor.re_search_children(r'update-source'))[0].ioscfg[0].strip(),
+                                     'bundle_dst': 'update-source ' + vce_sub_int + '.' +
+                                        (neighbor.re_search_children(r'update-source'))[0].ioscfg[0].strip().split('.')[1]})
+    if len(data) > 0:
+        import os
+        if not os.path.exists(final_folder):
+            f = open(final_folder, 'w+')
+        else:
+            f = open(final_folder, 'a+')
+        for entry in data:
+            line = "In " + entry['bgp'] + ', ' + entry['vrf'] + ', ' + entry['neighbor'] + \
+                 " replace the following: \n " + entry['bundle_src'] + " ---> " + entry['bundle_dst'] + "\n\n"
+            f.write(line)
+
+
 def run(site_configs):
 
     for box_config in site_configs:
@@ -313,7 +351,6 @@ def run(site_configs):
 
         print('Script Starts')
         ############## MAIN ###########
-
         if_subif_map = create_if_subif_map(VPE_CFG_TXT, be2po_map)
         migration_map = create_migartion_map(if_subif_map,VPE_CFG_TXT, be2po_map, NEW_BE)
         if_cfg_list = create_if_cfg_list(migration_map, VPE_CFG_TXT, VCE_CFG_TXT_IN)
@@ -327,8 +364,8 @@ def run(site_configs):
         #save also in final folder
         final_folder = box_config.base_dir + box_config.site + "FINAL/" + OSW_SWITCH + 'VPE_addendum.txt'
         write_cfg(conf_to_wite, final_folder)
-        print('Script Ends')
-
+        final_folder_bgp_check = box_config.base_dir + box_config.site + "FINAL/" + 'ATTENTION_POINT_FOR_BGP.txt'
+        check_bgp_adj(VPE_CFG_TXT, vpeosw_to_vpevce_map, final_folder_bgp_check)
         print('Script Ends')
 
 if __name__ == "__main__":
